@@ -1,0 +1,20 @@
+{{define "name_card"}}
+<div class="max-w-sm mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="p-4">
+        <p class="text-lg font-semibold text-gray-800">
+            User Personal Information
+        </p>
+        <ol class="mt-2 list-decimal list-inside">
+            <li class="text-gray-700">
+                <span class="font-medium">Name:</span> {{.Name}}
+            </li>
+            <li class="text-gray-700 mt-1">
+                <span class="font-medium">Phone:</span> {{.Phone}}
+            </li>
+            <li class="text-gray-700 mt-1">
+                <span class="font-medium">Email:</span> {{.Email}}
+            </li>
+        </ol>
+    </div>
+</div>
+{{end}}
