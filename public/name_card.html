@@ -1,20 +1,19 @@
-{{define "name_card"}}
-<div class="max-w-sm mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
+{{define "user_info_card"}}
+<div class="max-w-sm mx-auto mt-4 overflow-hidden bg-white rounded-lg shadow-lg">
     <div class="p-4">
-        <p class="text-lg font-semibold text-gray-800">
-            User Personal Information
-        </p>
+        <p class="text-lg font-semibold text-gray-800">User Personal Information</p>
         <ol class="mt-2 list-decimal list-inside">
             <li class="text-gray-700">
-                <span class="font-medium">Name:</span> {{.Name}}
+                <span class="font-medium">Name:</span> {{.UserInfo.Name}}
             </li>
-            <li class="text-gray-700 mt-1">
-                <span class="font-medium">Phone:</span> {{.Phone}}
+            <li class="mt-1 text-gray-700">
+                <span class="font-medium">Phone:</span> {{.UserInfo.Phone}}
             </li>
-            <li class="text-gray-700 mt-1">
-                <span class="font-medium">Email:</span> {{.Email}}
+            <li class="mt-1 text-gray-700">
+                <span class="font-medium">Email:</span> {{.UserInfo.Email}}
             </li>
         </ol>
+        {{template "button" .HideButtonData}}
     </div>
 </div>
 {{end}}
