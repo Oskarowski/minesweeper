@@ -1,0 +1,57 @@
+{{ define "game_settings_form" }}
+
+<form
+    id="game-settings-form"
+    hx-post="/start-game"
+    hx-target="#game-settings-form"
+    hx-swap="outerHTML"
+    class="p-8 rounded shadow-md w-96"
+>
+    <div class="mb-4">
+        <label for="gridSize" class="block mb-2 font-semibold text-gray-700"
+            >Grid Size:</label
+        >
+        <input
+            type="number"
+            id="gridSize"
+            name="grid-size"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter grid size (e.g., 10)"
+            required
+        />
+    </div>
+    <div class="mb-4">
+        <label for="mines" class="block mb-2 font-semibold text-gray-700"
+            >Number of Mines:</label
+        >
+        <input
+            type="number"
+            id="mines"
+            name="mines-amount"
+            class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Enter number of mines"
+        />
+    </div>
+    <div class="mb-4">
+        <label for="random-mines" class="inline-flex items-center">
+            <input
+                type="checkbox"
+                id="random-mines"
+                name="random-mines"
+                class="mr-2"
+            />
+            <span class="font-semibold text-gray-700"
+                >Random Number of Mines</span
+            >
+        </label>
+    </div>
+    <div class="mt-6 text-center">
+        <button
+            type="submit"
+            class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
+        >
+            Start Game
+        </button>
+    </div>
+</form>
+{{end}}
