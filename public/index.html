@@ -4,24 +4,18 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Hello, World!</title>
+        <title>Minesweeper!</title>
         <script
             src="https://unpkg.com/htmx.org@2.0.2"
             integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
             crossorigin="anonymous"
         ></script>
         <link rel="stylesheet" href="/dist/tailwind.css" />
+        <link rel="stylesheet" href="/dist/main.css" />
     </head>
-    <body class="p-6 mx-auto my-auto bg-gray-100">
-        <div class="max-w-lg p-6 mx-auto rounded-lg shadow-lg bg-warm-gray-400">
-            <p class="mb-4 text-2xl font-bold text-gray-800">Hello, World!</p>
-            <div
-                id="user-info-container"
-                class="flex items-center justify-center"
-            >
-                {{template "button" .RevealUserButton}}
-            </div>
-        </div>
+    <body class="flex items-center justify-center h-screen bg-gray-100">
+        {{template "game_settings_form"}}
+        <div id="game-grid"></div>
     </body>
 </html>
 {{end}}

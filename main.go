@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
+	"minesweeper/src"
 	"net/http"
 	"strconv"
-	"text/template"
 )
 
 // Package-level variable to store the parsed templates
@@ -51,14 +52,18 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Grid size: %v Mines amount: %v", gridSize, minesAmount)
+	game := src.NewGame(gridSize, minesAmount)
+
+	gameGridHtml := src.GenerateGridHTML(game)
 
 	responseData := struct {
-		GridSize    int
-		MinesAmount int
+		GridSize     int
+		MinesAmount  int
+		GameGridHtml template.HTML
 	}{
-		GridSize:    gridSize,
-		MinesAmount: minesAmount,
+		GridSize:     gridSize,
+		MinesAmount:  minesAmount,
+		GameGridHtml: template.HTML(gameGridHtml),
 	}
 
 	err := templates.ExecuteTemplate(w, "game_grid", responseData)
