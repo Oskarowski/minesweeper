@@ -1,10 +1,10 @@
 {{ define "game_grid" }}
-<div class="w-full h-screen p-8 bg-white rounded shadow-md">
+<div class="h-screen p-8 bg-white rounded shadow-md">
     <h1 class="mb-6 text-2xl font-bold text-center">Minesweeper</h1>
     <p class="text-center">Grid Size: {{.GridSize}} x {{.GridSize}}</p>
     <p class="mb-4 text-center">Number of Mines: {{.MinesAmount }}</p>
 
-    <div id="minesweeper-grid" class="grid gap-1 mt-6 text-center">
+    <div id="minesweeper-grid" class="mt-6 max-w-[600px] mx-auto">
         {{ .GameGridHtml }}
     </div>
 

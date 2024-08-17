@@ -23,7 +23,7 @@ func GenerateGridHTML(game *Game) string {
 				}
 			}
 
-			classes := "border border-gray-400 text-center mine-field aspect-square flex items-center justify-center bg-red hover:bg-gray-200"
+			classes := "border border-gray-400 text-center mine-field aspect-square flex items-center justify-center"
 
 			html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d'>%s</div>", cellID, classes, row, col, content)
 
