@@ -1,16 +1,23 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"html/template"
 	"log"
 	"minesweeper/src"
 	"net/http"
+	"os"
 	"strconv"
+
+	"github.com/gorilla/sessions"
+	"github.com/joho/godotenv"
 )
 
 // Package-level variable to store the parsed templates
 var templates *template.Template
+
+var globalStore *sessions.CookieStore
 
 func init() {
 	var err error
@@ -30,6 +37,42 @@ func init() {
 	for _, tmpl := range templates.Templates() {
 		log.Printf("Parsed template: %s", tmpl.Name())
 	}
+
+	gob.Register(&src.Game{})
+	gob.Register(&src.Cell{})
+
+	fmt.Println("Trying to load .env file...")
+	envErr := godotenv.Load(".env")
+	if envErr != nil {
+		panic(envErr)
+	}
+
+	globalStore = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
+}
+
+func saveGameToSession(w http.ResponseWriter, r *http.Request, game *src.Game) error {
+	session, err := globalStore.Get(r, "minesweeper-session")
+
+	if err != nil {
+		return err
+	}
+
+	session.Values["game"] = game
+	return session.Save(r, w)
+}
+
+func getGameFromSession(r *http.Request) (*src.Game, error) {
+	session, err := globalStore.Get(r, "minesweeper-session")
+
+	if err != nil {
+		return nil, err
+	}
+
+	if game, ok := session.Values["game"].(*src.Game); ok {
+		return game, nil
+	}
+
+	return nil, fmt.Errorf("game not found in session")
 }
 
 func startGameHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +97,11 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 
 	game := src.NewGame(gridSize, minesAmount)
 
+	if err := saveGameToSession(w, r, game); err != nil {
+		http.Error(w, fmt.Sprintf("Error saving game to session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	gameGridHtml := src.GenerateGridHTML(game)
 
 	responseData := struct {
@@ -73,6 +121,46 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func revealCellHandler(w http.ResponseWriter, r *http.Request) {
+	game, err := getGameFromSession(r)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	rowStr := r.URL.Query().Get("row")
+	colStr := r.URL.Query().Get("col")
+
+	row, err := strconv.Atoi(rowStr)
+	if err != nil {
+		http.Error(w, "Invalid row value", http.StatusBadRequest)
+		return
+	}
+
+	col, err := strconv.Atoi(colStr)
+	if err != nil {
+		http.Error(w, "Invalid column value", http.StatusBadRequest)
+		return
+	}
+
+	game.RevealCell(row, col)
+
+	cellContent := src.GetCellContent(&game.Grid[row][col])
+	cellHTML := fmt.Sprintf(
+		"<div id='cell-%d-%d' class='flex items-center justify-center text-center border border-gray-400 mine-field aspect-square'>%s</div>",
+		row, col, cellContent,
+	)
+
+	if err := saveGameToSession(w, r, game); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(cellHTML))
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	err := templates.ExecuteTemplate(w, "index", nil)
 
@@ -88,6 +176,8 @@ func main() {
 	http.HandleFunc("/", indexHandler)
 
 	http.HandleFunc("/start-game", startGameHandler)
+
+	http.HandleFunc("/reveal", revealCellHandler)
 
 	fmt.Println("Server is listening on port 8080...")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

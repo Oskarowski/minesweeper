@@ -25,7 +25,7 @@ func GenerateGridHTML(game *Game) string {
 
 			classes := "border border-gray-400 text-center mine-field aspect-square flex items-center justify-center"
 
-			html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d'>%s</div>", cellID, classes, row, col, content)
+			html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d' hx-target='#%s' hx-swap='innerHTML'>%s</div>", cellID, classes, row, col, cellID, content)
 
 		}
 
@@ -36,22 +36,11 @@ func GenerateGridHTML(game *Game) string {
 	return html
 }
 
-// func RevealCellHandler(w http.ResponseWriter, r *http.Request) {
-// 	row, _ := strconv.Atoi(r.URL.Query().Get("row"))
-// 	col, _ := strconv.Atoi(r.URL.Query().Get("col"))
-
-// 	//TODO add a way to retrieve the game from the request
-
-// 	mineHit, adjacentMines := currentGame.RevealCell(row, col)
-
-// 	if mineHit {
-// 		http.Error(w, "Game Ove! You hit a mine!", http.StatusOK)
-// 		return
-// 	}
-
-// 	gameGridHtml := gameGenerateGridHTML(currentGame)
-
-// 	w.Header().Set("HX-Trigger", "grid-updated")
-// 	w.Header().Set("HX-Trigger-After-Swap", "reveal-complete")
-// 	w.Write([]byte(gameGridHtml))
-// }
+func GetCellContent(cell *Cell) string {
+	if cell.HasMine {
+		return "💣"
+	} else if cell.AdjacentMines > 0 {
+		return strconv.Itoa(cell.AdjacentMines)
+	}
+	return ""
+}
