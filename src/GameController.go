@@ -16,6 +16,7 @@ type Game struct {
 	GridSize    int
 	MinesAmount int
 	Grid        [][]Cell
+	GameFailed  bool
 }
 
 func updateAdjacentCells(grid [][]Cell, row int, col int, gridSize int) {
@@ -97,6 +98,7 @@ func (g *Game) RevealCell(row int, col int) (bool, int) {
 	cell.IsRevealed = true
 
 	if cell.HasMine {
+		g.GameFailed = true
 		return true, -1
 	}
 

@@ -6,7 +6,13 @@ import (
 )
 
 func GenerateGridHTML(game *Game) string {
-	html := "<div id='game-grid' class='grid gap-1' style='grid-template-columns: repeat(" + strconv.Itoa(game.GridSize) + ", 1fr);'>"
+	disabledClass := ""
+
+	if game.GameFailed {
+		disabledClass = "pointer-events-none opacity-80"
+	}
+
+	html := "<div id='game-grid' class='grid gap-1 " + disabledClass + "' style='grid-template-columns: repeat(" + strconv.Itoa(game.GridSize) + ", 1fr);'>"
 
 	for row := 0; row < game.GridSize; row++ {
 		for col := 0; col < game.GridSize; col++ {
