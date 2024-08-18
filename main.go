@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/gob"
 	"fmt"
 	"html/template"
@@ -22,13 +23,13 @@ var globalStore *sessions.CookieStore
 func init() {
 	var err error
 
-	// Parse templates from the "public" and "public/components" directories
+	// Parse templates from the "public" and "public/**" directories
 	templates, err = template.ParseGlob("public/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing templates: %v", err)
 	}
 
-	templates, err = templates.ParseGlob("public/components/*.html")
+	templates, err = templates.ParseGlob("public/**/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing components: %v", err)
 	}
@@ -102,7 +103,11 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gameGridHtml := src.GenerateGridHTML(game)
+	gameGridHtml, gridGenerationErr := generateGridHTML(game)
+	if gridGenerationErr != nil {
+		http.Error(w, fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr), http.StatusInternalServerError)
+		return
+	}
 
 	responseData := struct {
 		GridSize     int
@@ -119,6 +124,15 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
 		return
 	}
+}
+
+func generateGridHTML(game *src.Game) (string, error) {
+	var buf bytes.Buffer
+	err := templates.ExecuteTemplate(&buf, "minesweeper_grid", game)
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func revealCellHandler(w http.ResponseWriter, r *http.Request) {
@@ -151,7 +165,11 @@ func revealCellHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gameGridHtml := src.GenerateGridHTML(game)
+	gameGridHtml, gridGenerationErr := generateGridHTML(game)
+	if gridGenerationErr != nil {
+		http.Error(w, fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr), http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(gameGridHtml))
