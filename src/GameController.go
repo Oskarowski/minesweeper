@@ -60,6 +60,29 @@ func NewGame(gridSize int, minesAmount int) *Game {
 	}
 }
 
+func (g *Game) revealSurroundingCells(row int, col int) {
+	for i := -1; i <= 1; i++ {
+		for j := -1; j <= 1; j++ {
+			if i == 0 && j == 0 {
+				continue // we are skipping the current cell
+			}
+
+			r, c := row+i, col+j
+
+			if r >= 0 && r < g.GridSize && c >= 0 && c < g.GridSize {
+				neighbor := &g.Grid[r][c]
+
+				if !neighbor.IsRevealed && !neighbor.HasMine {
+					neighbor.IsRevealed = true
+					if neighbor.AdjacentMines == 0 {
+						g.revealSurroundingCells(r, c)
+					}
+				}
+			}
+		}
+	}
+}
+
 func (g *Game) RevealCell(row int, col int) (bool, int) {
 	if row < 0 || row >= g.GridSize || col < 0 || col >= g.GridSize {
 		return false, 0
@@ -72,9 +95,16 @@ func (g *Game) RevealCell(row int, col int) (bool, int) {
 	}
 
 	cell.IsRevealed = true
+
 	if cell.HasMine {
 		return true, -1
 	}
 
-	return false, cell.AdjacentMines
+	if cell.AdjacentMines > 0 {
+		return false, cell.AdjacentMines
+	}
+
+	g.revealSurroundingCells(row, col)
+
+	return false, 0
 }

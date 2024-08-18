@@ -3,6 +3,10 @@
     transition: background-color 0.2s ease;
 }
 
-.mine-field:hover {
+.cell-revealed {
+    background-color: burlywood;
+}
+
+.mine-field:not(.cell-revealed):hover {
     background-color: rgb(235, 219, 0);
 }

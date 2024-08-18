@@ -146,19 +146,15 @@ func revealCellHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.RevealCell(row, col)
 
-	cellContent := src.GetCellContent(&game.Grid[row][col])
-	cellHTML := fmt.Sprintf(
-		"<div id='cell-%d-%d' class='flex items-center justify-center text-center border border-gray-400 mine-field aspect-square'>%s</div>",
-		row, col, cellContent,
-	)
-
 	if err := saveGameToSession(w, r, game); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	gameGridHtml := src.GenerateGridHTML(game)
+
 	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(cellHTML))
+	w.Write([]byte(gameGridHtml))
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {

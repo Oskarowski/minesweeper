@@ -6,7 +6,7 @@ import (
 )
 
 func GenerateGridHTML(game *Game) string {
-	html := "<div class='grid gap-1' style='grid-template-columns: repeat(" + strconv.Itoa(game.GridSize) + ", 1fr);'>"
+	html := "<div id='game-grid' class='grid gap-1' style='grid-template-columns: repeat(" + strconv.Itoa(game.GridSize) + ", 1fr);'>"
 
 	for row := 0; row < game.GridSize; row++ {
 		for col := 0; col < game.GridSize; col++ {
@@ -14,6 +14,7 @@ func GenerateGridHTML(game *Game) string {
 
 			cellID := fmt.Sprintf("cell-%d-%d", row, col)
 			content := ""
+			classes := ""
 
 			if cell.IsRevealed {
 				if cell.HasMine {
@@ -21,11 +22,13 @@ func GenerateGridHTML(game *Game) string {
 				} else if cell.AdjacentMines > 0 {
 					content = strconv.Itoa(cell.AdjacentMines)
 				}
+				classes += "cell-revealed "
 			}
 
-			classes := "border border-gray-400 text-center mine-field aspect-square flex items-center justify-center"
+			classes += "border border-gray-400 text-center mine-field aspect-square flex items-center justify-center "
 
-			html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d' hx-target='#%s' hx-swap='innerHTML'>%s</div>", cellID, classes, row, col, cellID, content)
+			// html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d' hx-target='#%s' hx-swap='innerHTML'>%s</div>", cellID, classes, row, col, cellID, content)
+			html += fmt.Sprintf("<div id='%s' class='%s' hx-get='/reveal?row=%d&col=%d' hx-target='#game-grid' hx-swap='outerHTML'>%s</div>", cellID, classes, row, col, content)
 
 		}
 
