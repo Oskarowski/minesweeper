@@ -175,6 +175,24 @@ func revealCellHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(gameGridHtml))
 }
 
+func flagCellHandler(w http.ResponseWriter, r *http.Request) {
+	row, _ := strconv.Atoi(r.URL.Query().Get("row"))
+	col, _ := strconv.Atoi(r.URL.Query().Get("col"))
+
+	game, _ := getGameFromSession(r)
+
+	game.FlagCell(row, col)
+
+	if err := saveGameToSession(w, r, game); err != nil {
+		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	gameGridHtml, _ := generateGridHTML(game)
+
+	w.Write([]byte(gameGridHtml))
+}
+
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	err := templates.ExecuteTemplate(w, "index", nil)
 
@@ -192,6 +210,8 @@ func main() {
 	http.HandleFunc("/start-game", startGameHandler)
 
 	http.HandleFunc("/reveal", revealCellHandler)
+
+	http.HandleFunc("/flag", flagCellHandler)
 
 	fmt.Println("Server is listening on port 8080...")
 	if err := http.ListenAndServe(":8080", nil); err != nil {

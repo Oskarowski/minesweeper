@@ -16,14 +16,16 @@
       {{ range $colIndex, $cell := $row }}
         <div
           id="cell-{{ $rowIndex }}-{{ $colIndex }}"
-          class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square {{ if $cell.IsRevealed }}
-            cell-revealed
-          {{ end }}"
+          class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square 
+          {{ if $cell.IsRevealed }}cell-revealed{{ end }}
+          {{ if $cell.IsFlagged }}cell-flagged{{ end }}"
           hx-get="/reveal?row={{ $rowIndex }}&col={{ $colIndex }}"
           hx-target="#game-grid"
           hx-swap="outerHTML"
         >
-          {{ if $cell.IsRevealed }}
+          {{ if $cell.IsFlagged }}
+            🚩
+          {{ else if $cell.IsRevealed }}
             {{ if $cell.HasMine }}
               💣
             {{ else if
@@ -36,4 +38,22 @@
       {{ end }}
     {{ end }}
   </div>
+
+  <script>
+    document
+      .getElementById("game-grid")
+      .addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+
+        let cell = event.target.closest(".mine-field");
+
+        if (cell) {
+          let [row, col] = cell.id.split("-").slice(1).map(Number);
+          htmx.ajax("POST", `/flag?row=${row}&col=${col}`, {
+            target: "#game-grid",
+            swap: "outerHTML",
+          });
+        }
+      });
+  </script>
 {{ end }}

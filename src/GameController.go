@@ -2,7 +2,6 @@ package src
 
 import (
 	"math/rand"
-	"time"
 )
 
 type Cell struct {
@@ -38,9 +37,15 @@ func NewGame(gridSize int, minesAmount int) *Game {
 
 	for i := range grid {
 		grid[i] = make([]Cell, gridSize)
+		for j := range grid[i] {
+			grid[i][j] = Cell{
+				IsRevealed:    false,
+				HasMine:       false,
+				AdjacentMines: 0,
+			}
+		}
 	}
 
-	rand.Seed(time.Now().UnixNano())
 	minesPlaced := 0
 
 	for minesPlaced < minesAmount {
@@ -91,6 +96,10 @@ func (g *Game) RevealCell(row int, col int) (bool, int) {
 
 	cell := &g.Grid[row][col]
 
+	if cell.IsFlagged {
+		return false, 0
+	}
+
 	if cell.IsRevealed {
 		return cell.HasMine, cell.AdjacentMines
 	}
@@ -109,4 +118,17 @@ func (g *Game) RevealCell(row int, col int) (bool, int) {
 	g.revealSurroundingCells(row, col)
 
 	return false, 0
+}
+
+func (g *Game) FlagCell(row int, col int) {
+	if row < 0 || row >= g.GridSize || col < 0 || col >= g.GridSize {
+		return
+	}
+	cell := &g.Grid[row][col]
+
+	if cell.IsRevealed {
+		return
+	}
+
+	cell.IsFlagged = !cell.IsFlagged
 }
