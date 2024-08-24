@@ -63,8 +63,13 @@ func main() {
 
 	http.HandleFunc("/flag", handler.FlagCell)
 
-	fmt.Println("Server is listening on port 8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	fmt.Printf("Server is listening on port %s...\n", port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		fmt.Printf("Failed to start server: %v\n", err)
 	}
 }
