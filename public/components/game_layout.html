@@ -1,0 +1,65 @@
+{{ define "game_layout" }}
+<style>
+    #game-grid {
+        --grid-size: {{ .GridSize }};
+        grid-template-columns: repeat(var(--grid-size), 1fr);
+    }
+</style>
+
+    <div class="h-screen p-8 bg-white rounded shadow-md">
+        <h1 class="mb-6 text-2xl font-bold text-center">Minesweeper</h1>
+        <p class="text-center">Grid Size: {{ .GridSize }} x {{ .GridSize }}</p>
+        <p class="mb-4 text-center">Number of Mines: {{ .MinesAmount }}</p>
+
+        <div id="minesweeper-grid" class="mt-6 max-w-[600px] mx-auto">
+            {{ .GameGridHtml }}
+        </div>
+
+        <div class="mt-6 text-center">
+            <button
+                onclick="location.reload()"
+                class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-700"
+            >
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        console.log("Game grid component loaded.");
+        document.addEventListener(
+            "DOMContentLoaded",
+            initializeEventsForGameGrid(),
+        );
+
+        document.addEventListener("htmx:afterSwap", (event) => {
+
+            if (event.detail.target.id === "game-grid") {
+                console.log("Game grid swapped via HTMX");
+                initializeEventsForGameGrid();
+            }
+        });
+
+        function initializeEventsForGameGrid() {
+            console.log("initializeEventsForGameGrid");
+
+            const gameGrid = document.getElementById("game-grid");
+
+            if (!gameGrid) return;
+
+            gameGrid.addEventListener("contextmenu", (e) => {
+                e.preventDefault();
+
+                let cell = e.target.closest(".mine-field");
+
+                if (!cell) return;
+
+                let [row, col] = cell.id.split("-").slice(1).map(Number);
+                htmx.ajax("POST", `/flag?row=${row}&col=${col}`, {
+                    target: "#game-grid",
+                    swap: "outerHTML",
+                });
+            });
+        }
+    </script>
+{{ end }}

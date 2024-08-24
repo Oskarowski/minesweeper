@@ -119,7 +119,7 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 		GameGridHtml: template.HTML(gameGridHtml),
 	}
 
-	err := templates.ExecuteTemplate(w, "game_grid", responseData)
+	err := templates.ExecuteTemplate(w, "game_layout", responseData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
 		return
@@ -128,7 +128,7 @@ func startGameHandler(w http.ResponseWriter, r *http.Request) {
 
 func generateGridHTML(game *src.Game) (string, error) {
 	var buf bytes.Buffer
-	err := templates.ExecuteTemplate(&buf, "minesweeper_grid", game)
+	err := templates.ExecuteTemplate(&buf, "game_grid", game)
 	if err != nil {
 		return "", err
 	}

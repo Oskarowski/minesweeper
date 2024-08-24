@@ -1,0 +1,38 @@
+{{ define "game_grid" }}
+    <div
+        id="game-grid"
+        class="grid gap-1 {{ if .GameFailed }}
+            pointer-events-none opacity-80 border-[6px] border-double
+            border-red-800
+        {{ else if .GameWon }}
+            pointer-events-none opacity-80 border-[6px] border-double
+            border-green-500
+        {{ end }}"
+    >
+        {{ range $rowIndex , $row := .Grid }}
+            {{ range $colIndex, $cell := $row }}
+                <div
+                    id="cell-{{ $rowIndex }}-{{ $colIndex }}"
+                    class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square 
+          {{ if $cell.IsRevealed }}cell-revealed{{ end }}
+          {{ if $cell.IsFlagged }}cell-flagged{{ end }}"
+                    hx-get="/reveal?row={{ $rowIndex }}&col={{ $colIndex }}"
+                    hx-target="#game-grid"
+                    hx-swap="outerHTML"
+                >
+                    {{ if $cell.IsFlagged }}
+                        🚩
+                    {{ else if $cell.IsRevealed }}
+                        {{ if $cell.HasMine }}
+                            💣
+                        {{ else if
+                            gt $cell.AdjacentMines 0
+                        }}
+                            {{ $cell.AdjacentMines }}
+                        {{ end }}
+                    {{ end }}
+                </div>
+            {{ end }}
+        {{ end }}
+    </div>
+{{ end }}
