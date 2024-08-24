@@ -24,12 +24,12 @@ func init() {
 	var err error
 
 	// Parse templates from the "public" and "public/**" directories
-	templates, err = template.ParseGlob("public/*.html")
+	templates, err = template.ParseGlob("templates/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing templates: %v", err)
 	}
 
-	templates, err = templates.ParseGlob("public/**/*.html")
+	templates, err = templates.ParseGlob("templates/**/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing components: %v", err)
 	}
