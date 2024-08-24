@@ -16,6 +16,7 @@ type Game struct {
 	MinesAmount int
 	Grid        [][]Cell
 	GameFailed  bool
+	GameWon     bool
 }
 
 func updateAdjacentCells(grid [][]Cell, row int, col int, gridSize int) {
@@ -131,4 +132,27 @@ func (g *Game) FlagCell(row int, col int) {
 	}
 
 	cell.IsFlagged = !cell.IsFlagged
+}
+
+func (g *Game) CheckWinCondition() bool {
+	if g.GameWon {
+		return g.GameWon
+	}
+
+	var flaggedMines uint16 = 0
+	totalMines := uint16(g.MinesAmount)
+
+	for _, row := range g.Grid {
+		for _, cell := range row {
+			if cell.HasMine && cell.IsFlagged {
+				flaggedMines++
+			}
+
+			if !cell.HasMine && cell.IsFlagged {
+				return false
+			}
+		}
+	}
+
+	return totalMines == flaggedMines
 }

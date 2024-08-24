@@ -9,7 +9,10 @@
   <div
     id="game-grid"
     class="grid gap-1 {{ if .GameFailed }}
-      pointer-events-none opacity-80
+      pointer-events-none opacity-80 border-[6px] border-double border-red-800
+    {{ else if .GameWon }}
+      pointer-events-none opacity-80 border-[6px] border-double
+      border-green-500
     {{ end }}"
   >
     {{ range $rowIndex , $row := .Grid }}

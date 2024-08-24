@@ -183,6 +183,10 @@ func flagCellHandler(w http.ResponseWriter, r *http.Request) {
 
 	game.FlagCell(row, col)
 
+	if game.CheckWinCondition() {
+		game.GameWon = true
+	}
+
 	if err := saveGameToSession(w, r, game); err != nil {
 		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
 		return
