@@ -1,14 +1,19 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"encoding/gob"
 	"fmt"
 	"html/template"
 	"log"
 	"minesweeper/internal"
+	"minesweeper/internal/db"
 	"minesweeper/src"
 	"net/http"
 	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
@@ -67,6 +72,15 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	ctx := context.Background()
+	databaseURL := os.Getenv("DATABASE_URL")
+	dbConn, err := sql.Open("sqlite3", databaseURL)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v\n", err)
+	}
+
+	queries := db.New(dbConn)
 
 	fmt.Printf("Server is listening on port %s...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
