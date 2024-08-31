@@ -1,19 +1,16 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"encoding/gob"
 	"fmt"
 	"html/template"
 	"log"
 	"minesweeper/internal"
 	"minesweeper/internal/db"
-	"minesweeper/src"
 	"net/http"
 	"os"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "modernc.org/sqlite"
 
 	"github.com/gorilla/sessions"
 	"github.com/joho/godotenv"
@@ -43,9 +40,6 @@ func init() {
 		log.Printf("Parsed template: %s", tmpl.Name())
 	}
 
-	gob.Register(&src.Game{})
-	gob.Register(&src.Cell{})
-
 	fmt.Println("Trying to load .env file...")
 	envErr := godotenv.Load(".env")
 	if envErr != nil {
@@ -56,9 +50,25 @@ func init() {
 }
 
 func main() {
+	logFile, err := os.OpenFile("minesweeper.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatalf("Failed to open log file: %v", err)
+	}
+	defer logFile.Close()
+	log.SetOutput(logFile)
+
 	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
 
-	handler := internal.NewHandler(templates, globalStore)
+	databaseURL := os.Getenv("DATABASE_URL")
+	dbConn, err := sql.Open("sqlite", databaseURL)
+	if err != nil {
+		log.Fatalf("Failed to open database: %v\n", err)
+	}
+	defer dbConn.Close()
+
+	queries := db.New(dbConn)
+
+	handler := internal.NewHandler(templates, globalStore, queries)
 
 	http.HandleFunc("/", handler.Index)
 
@@ -72,15 +82,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-
-	ctx := context.Background()
-	databaseURL := os.Getenv("DATABASE_URL")
-	dbConn, err := sql.Open("sqlite3", databaseURL)
-	if err != nil {
-		log.Fatalf("Failed to open database: %v\n", err)
-	}
-
-	queries := db.New(dbConn)
 
 	fmt.Printf("Server is listening on port %s...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
