@@ -3,7 +3,9 @@ package internal
 import (
 	"fmt"
 	"html/template"
-	"minesweeper/src"
+	"log"
+	"minesweeper/internal/db"
+	"minesweeper/internal/models"
 	"net/http"
 	"strconv"
 
@@ -13,10 +15,11 @@ import (
 type Handler struct {
 	Templates *template.Template
 	Store     *sessions.CookieStore
+	Queries   *db.Queries
 }
 
-func NewHandler(templates *template.Template, store *sessions.CookieStore) *Handler {
-	return &Handler{Templates: templates, Store: store}
+func NewHandler(templates *template.Template, store *sessions.CookieStore, queries *db.Queries) *Handler {
+	return &Handler{Templates: templates, Store: store, Queries: queries}
 }
 
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
@@ -49,7 +52,27 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	game := src.NewGame(gridSize, minesAmount)
+	// TODO eliminate need for this double creation of game because how grid state is initialized
+	newGame := models.NewGame(gridSize, minesAmount)
+	dbGame, dbGameErr := h.Queries.CreateGame(r.Context(), db.CreateGameParams{
+		GridSize:    int64(gridSize),
+		MinesAmount: int64(minesAmount),
+		GridState:   models.EncodeGameGrid(newGame.Grid),
+	})
+
+	if dbGameErr != nil {
+		log.Printf("Error creating game: %v", dbGameErr)
+		http.Error(w, fmt.Sprintf("Error creating game: %v", dbGameErr), http.StatusInternalServerError)
+		return
+	}
+
+	game, gameModelErr := models.FromDbGame(&dbGame)
+
+	if gameModelErr != nil {
+		log.Printf("Error creating game model: %v", gameModelErr)
+		http.Error(w, fmt.Sprintf("Error creating game model: %v", gameModelErr), http.StatusInternalServerError)
+		return
+	}
 
 	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
 		http.Error(w, fmt.Sprintf("Error saving game to session: %v", err), http.StatusInternalServerError)
@@ -80,13 +103,6 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
-	game, err := GetGameFromSession(r, h.Store)
-
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
-		return
-	}
-
 	rowStr := r.URL.Query().Get("row")
 	colStr := r.URL.Query().Get("col")
 
@@ -102,10 +118,44 @@ func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	storedGamesUuids, err := GetGameFromSession(r, h.Store)
+
+	if err != nil || len(storedGamesUuids) == 0 {
+		log.Printf("Failed to get game from session: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	lastGameUuid := storedGamesUuids[len(storedGamesUuids)-1]
+
+	dbGame, err := h.Queries.GetGameByUuid(r.Context(), lastGameUuid)
+	if err != nil {
+		log.Printf("Failed to get game from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get game from database: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	game, err := models.FromDbGame(&dbGame)
+	if err != nil {
+		log.Printf("Failed to convert db game: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to convert db game: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 	game.RevealCell(row, col)
 
-	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
+	encodedGridState := models.EncodeGameGrid(game.Grid)
+
+	err = h.Queries.UpdateGameGridStateById(r.Context(), db.UpdateGameGridStateByIdParams{
+		GameFailed: game.GameFailed,
+		GameWon:    game.GameWon,
+		GridState:  encodedGridState,
+		ID:         game.ID,
+	})
+
+	if err != nil {
+		log.Printf("Failed to update game state in database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to update game state in database: %v", err), http.StatusInternalServerError)
 		return
 	}
 
@@ -123,16 +173,41 @@ func (h *Handler) FlagCell(w http.ResponseWriter, r *http.Request) {
 	row, _ := strconv.Atoi(r.URL.Query().Get("row"))
 	col, _ := strconv.Atoi(r.URL.Query().Get("col"))
 
-	game, _ := GetGameFromSession(r, h.Store)
+	storedGamesUuids, err := GetGameFromSession(r, h.Store)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	lastGameUuid := storedGamesUuids[len(storedGamesUuids)-1]
+
+	dbGame, err := h.Queries.GetGameByUuid(r.Context(), lastGameUuid)
+	if err != nil {
+		log.Printf("Failed to get game from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get game from database: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	game, err := models.FromDbGame(&dbGame)
+	if err != nil {
+		log.Printf("Failed to convert db game: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to convert db game: %v", err), http.StatusInternalServerError)
+		return
+	}
 
 	game.FlagCell(row, col)
 
-	if game.CheckWinCondition() {
-		game.GameWon = true
-	}
-
-	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
-		http.Error(w, fmt.Sprintf("Failed to save game: %v", err), http.StatusInternalServerError)
+	encodedGridState := models.EncodeGameGrid(game.Grid)
+	err = h.Queries.UpdateGameGridStateById(r.Context(), db.UpdateGameGridStateByIdParams{
+		GameFailed: game.GameFailed,
+		GameWon:    game.GameWon,
+		GridState:  encodedGridState,
+		ID:         game.ID,
+	})
+	if err != nil {
+		log.Printf("Failed to update game state in database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to update game state in database: %v", err), http.StatusInternalServerError)
 		return
 	}
 

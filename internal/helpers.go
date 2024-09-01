@@ -3,10 +3,10 @@ package internal
 import (
 	"bytes"
 	"html/template"
-	"minesweeper/src"
+	"minesweeper/internal/models"
 )
 
-func GenerateGridHTML(templates *template.Template, game *src.Game) (string, error) {
+func GenerateGridHTML(templates *template.Template, game *models.Game) (string, error) {
 	var buf bytes.Buffer
 	err := templates.ExecuteTemplate(&buf, "game_grid", game)
 	if err != nil {
