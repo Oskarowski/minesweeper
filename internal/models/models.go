@@ -1,6 +1,7 @@
 package models
 
 import (
+	"log"
 	"math/rand"
 	"minesweeper/internal/db"
 	"strings"
@@ -94,35 +95,36 @@ func (g *Game) revealSurroundingCells(row int, col int) {
 	}
 }
 
-func (g *Game) RevealCell(row int, col int) (bool, int) {
+func (g *Game) RevealCell(row int, col int) {
 	if row < 0 || row >= g.GridSize || col < 0 || col >= g.GridSize {
-		return false, 0
+		return
 	}
 
 	cell := &g.Grid[row][col]
 
 	if cell.IsFlagged {
-		return false, 0
+		return
 	}
 
 	if cell.IsRevealed {
-		return cell.HasMine, cell.AdjacentMines
+		return
 	}
 
 	cell.IsRevealed = true
 
 	if cell.HasMine {
+		log.Printf("Game with UUID: %s is ended and FAILED", g.Uuid)
+
 		g.GameFailed = true
-		return true, -1
+		return
 	}
+	g.CheckWinCondition()
 
 	if cell.AdjacentMines > 0 {
-		return false, cell.AdjacentMines
+		return
 	}
 
 	g.revealSurroundingCells(row, col)
-
-	return false, 0
 }
 
 func (g *Game) FlagCell(row int, col int) {
@@ -136,6 +138,8 @@ func (g *Game) FlagCell(row int, col int) {
 	}
 
 	cell.IsFlagged = !cell.IsFlagged
+
+	g.CheckWinCondition()
 }
 
 func (g *Game) CheckWinCondition() bool {
@@ -144,6 +148,7 @@ func (g *Game) CheckWinCondition() bool {
 	}
 
 	var flaggedMines uint16 = 0
+	var revealedCells uint16 = 0
 	totalMines := uint16(g.MinesAmount)
 
 	for _, row := range g.Grid {
@@ -152,21 +157,36 @@ func (g *Game) CheckWinCondition() bool {
 				flaggedMines++
 			}
 
+			if cell.IsRevealed {
+				revealedCells++
+			}
+
 			if !cell.HasMine && cell.IsFlagged {
 				return false
 			}
 		}
 	}
 
-	return totalMines == flaggedMines
+	var totalCells = uint16(g.GridSize * g.GridSize)
+	var allEmptyCellsRevealed bool = totalCells-flaggedMines == revealedCells
+	var flaggedAllMines = totalMines == flaggedMines
+
+	if allEmptyCellsRevealed && flaggedAllMines {
+		log.Printf("Game with UUID: %s is ended and WON", g.Uuid)
+		g.GameWon = true
+		return true
+	}
+
+	return false
 }
 
 const (
-	CELL_REVELED  = 'R'
-	CELL_FLAGGED  = 'F'
-	CELL_HAS_MINE = 'M'
-	CELL_EMPTY    = 'E'
-	ROW_SEPARATOR = '|'
+	CELL_REVEALED     = 'R'
+	CELL_FLAGGED      = 'F'
+	CELL_FLAGGED_MINE = 'X'
+	CELL_HAS_MINE     = 'M'
+	CELL_EMPTY        = 'E'
+	ROW_SEPARATOR     = '|'
 )
 
 // EncodeGameGrid encodes a game grid into a string for easier storage and transport.
@@ -175,6 +195,7 @@ const (
 //
 // - 'R' for a revealed cell
 // - 'F' for a flagged cell
+// - 'X' for a flagged cell with a mine
 // - 'M' for a non-revealed cell with a mine
 // - 'E' for a non-revealed cell without a mine
 //
@@ -185,11 +206,13 @@ func EncodeGameGrid(grid [][]Cell) string {
 	for _, row := range grid {
 		for _, cell := range row {
 			if cell.IsRevealed {
-				sb.WriteRune(CELL_REVELED)
-			} else if cell.IsFlagged {
-				sb.WriteRune(CELL_FLAGGED)
+				sb.WriteRune(CELL_REVEALED)
+			} else if cell.IsFlagged && cell.HasMine {
+				sb.WriteRune(CELL_FLAGGED_MINE)
 			} else if cell.HasMine {
 				sb.WriteRune(CELL_HAS_MINE)
+			} else if cell.IsFlagged {
+				sb.WriteRune(CELL_FLAGGED)
 			} else {
 				sb.WriteRune(CELL_EMPTY)
 			}
@@ -224,8 +247,10 @@ func DecodeGameGrid(encodedGameGrid string, gridSize int) [][]Cell {
 
 		for j, char := range row {
 			switch char {
-			case CELL_REVELED:
+			case CELL_REVEALED:
 				decodedGameGrid[i][j] = Cell{IsRevealed: true}
+			case CELL_FLAGGED_MINE:
+				decodedGameGrid[i][j] = Cell{IsFlagged: true, HasMine: true}
 			case CELL_FLAGGED:
 				decodedGameGrid[i][j] = Cell{IsFlagged: true}
 			case CELL_HAS_MINE:

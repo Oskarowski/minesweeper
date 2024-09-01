@@ -1,38 +1,79 @@
 package models
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
 
 func TestEncodeGameGrid(t *testing.T) {
-	grid := [][]Cell{
-		{{HasMine: true}, {IsRevealed: true}, {IsFlagged: true}, {AdjacentMines: 1}},
-		{{}, {HasMine: true}, {}, {IsFlagged: true}},
+	testCases := []struct {
+		name     string
+		grid     [][]Cell
+		expected string
+	}{
+		{
+			name: "Simple grid with mine, revealed, flagged, empty",
+			grid: [][]Cell{
+				{{HasMine: true}, {IsRevealed: true}, {IsFlagged: true}, {AdjacentMines: 1}},
+				{{}, {HasMine: true}, {}, {IsFlagged: true}},
+			},
+			expected: string(CELL_HAS_MINE) + string(CELL_REVEALED) + string(CELL_FLAGGED) + string(CELL_EMPTY) + string(ROW_SEPARATOR) +
+				string(CELL_EMPTY) + string(CELL_HAS_MINE) + string(CELL_EMPTY) + string(CELL_FLAGGED) + string(ROW_SEPARATOR),
+		},
+		{
+			name: "All cells flagged with mines",
+			grid: [][]Cell{
+				{{IsFlagged: true, HasMine: true}, {IsFlagged: true, HasMine: true}},
+				{{IsFlagged: true, HasMine: true}, {IsFlagged: true, HasMine: true}},
+			},
+			expected: string(CELL_FLAGGED_MINE) + string(CELL_FLAGGED_MINE) + string(ROW_SEPARATOR) +
+				string(CELL_FLAGGED_MINE) + string(CELL_FLAGGED_MINE) + string(ROW_SEPARATOR),
+		},
 	}
 
-	expected := string(CELL_HAS_MINE) + string(CELL_REVELED) + string(CELL_FLAGGED) + string(CELL_EMPTY) + string(ROW_SEPARATOR) + string(CELL_EMPTY) + string(CELL_HAS_MINE) + string(CELL_EMPTY) + string(CELL_FLAGGED) + string(ROW_SEPARATOR)
-
-	var encodedGrid string = EncodeGameGrid(grid)
-
-	if encodedGrid != expected {
-		t.Errorf("Expected encoded grid to be '%s', but got '%s'", expected, encodedGrid)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			encodedGameGrid := EncodeGameGrid(tc.grid)
+			if encodedGameGrid != tc.expected {
+				t.Errorf("Test case '%s' failed. Expected encoded grid to be '%s', but got '%s'", tc.name, tc.expected, encodedGameGrid)
+			}
+		})
 	}
 }
 
 func TestDecodeGameGrid(t *testing.T) {
-	encodedGameString := "MR|EM|"
-
-	expected := [][]Cell{
-		{{HasMine: true, AdjacentMines: 1}, {IsRevealed: true, AdjacentMines: 2}},
-		{{AdjacentMines: 2}, {HasMine: true, AdjacentMines: 1}},
+	testCases := []struct {
+		name          string
+		encodedString string
+		gridSize      int
+		expected      [][]Cell
+	}{
+		{
+			name:          "Simple decode test",
+			encodedString: "MR|EM|",
+			gridSize:      2,
+			expected: [][]Cell{
+				{{HasMine: true, AdjacentMines: 1}, {IsRevealed: true, AdjacentMines: 2}},
+				{{AdjacentMines: 2}, {HasMine: true, AdjacentMines: 1}},
+			},
+		},
+		{
+			name:          "All cells flagged with mines",
+			encodedString: "XX|XX|",
+			gridSize:      2,
+			expected: [][]Cell{
+				{{IsFlagged: true, HasMine: true, AdjacentMines: 3}, {IsFlagged: true, HasMine: true, AdjacentMines: 3}},
+				{{IsFlagged: true, HasMine: true, AdjacentMines: 3}, {IsFlagged: true, HasMine: true, AdjacentMines: 3}},
+			},
+		},
 	}
-	fmt.Println(encodedGameString)
 
-	decoded := DecodeGameGrid(encodedGameString, 2)
-
-	if !reflect.DeepEqual(decoded, expected) {
-		t.Errorf("Expected decoded grid to be '%v', but got '%v'", expected, decoded)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			decodedGameGrid := DecodeGameGrid(tc.encodedString, tc.gridSize)
+			if !reflect.DeepEqual(decodedGameGrid, tc.expected) {
+				t.Errorf("Test case '%s' failed. Expected decoded grid to be '%v', but got '%v'", tc.name, tc.expected, decodedGameGrid)
+			}
+		})
 	}
 }

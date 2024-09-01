@@ -198,14 +198,12 @@ func (h *Handler) FlagCell(w http.ResponseWriter, r *http.Request) {
 
 	game.FlagCell(row, col)
 
-	if game.CheckWinCondition() {
-		game.GameWon = true
-	}
-
 	encodedGridState := models.EncodeGameGrid(game.Grid)
 	err = h.Queries.UpdateGameGridStateById(r.Context(), db.UpdateGameGridStateByIdParams{
-		GridState: encodedGridState,
-		ID:        game.ID,
+		GameFailed: game.GameFailed,
+		GameWon:    game.GameWon,
+		GridState:  encodedGridState,
+		ID:         game.ID,
 	})
 	if err != nil {
 		log.Printf("Failed to update game state in database: %v", err)
