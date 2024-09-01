@@ -18,14 +18,20 @@ func SaveGameToSession(w http.ResponseWriter, r *http.Request, game *models.Game
 
 	if err != nil {
 		log.Printf("Failed to get session: %v", err)
-		return err
+		return fmt.Errorf("failed to get session: %w", err)
 	}
 
 	var uuids []string
 
+	// Retrieve existing UUIDs from the session, if available
 	if storedUuids, ok := session.Values["game_uuids"]; ok {
-		uuids, _ = storedUuids.([]string)
-		log.Printf("Retrieved existing game UUIDs from session: %v", uuids)
+		// Check type assertion
+		if uuids, ok = storedUuids.([]string); !ok {
+			log.Printf("Unexpected type for game_uuids: %T. Resetting UUIDs.", storedUuids)
+			uuids = []string{}
+		} else {
+			log.Printf("Retrieved existing game UUIDs from session: %v", uuids)
+		}
 	} else {
 		log.Printf("No existing game UUIDs found in session.")
 	}
@@ -34,11 +40,13 @@ func SaveGameToSession(w http.ResponseWriter, r *http.Request, game *models.Game
 		uuids = append(uuids, game.Uuid)
 		session.Values["game_uuids"] = uuids
 		log.Printf("Added new game UUID to session: %s", game.Uuid)
+	} else {
+		log.Printf("Game UUID %s already exists in session, not adding.", game.Uuid)
 	}
 
 	if err := session.Save(r, w); err != nil {
 		log.Printf("Failed to save session: %v", err)
-		return err
+		return fmt.Errorf("failed to save session: %w", err)
 	}
 
 	log.Printf("Session saved successfully. Elements in slice: %d Updated game UUIDs in session: %+q", len(uuids), uuids)
@@ -51,10 +59,14 @@ func GetGameFromSession(r *http.Request, store *sessions.CookieStore) ([]string,
 		return nil, err
 	}
 
-	// Get the list of game UUIDs
-	uuids, ok := session.Values["game_uuids"].([]string)
-	if !ok {
+	rawUuids, exists := session.Values["game_uuids"]
+	if !exists {
 		return nil, fmt.Errorf("no game UUIDs found in session")
+	}
+
+	uuids, ok := rawUuids.([]string)
+	if !ok {
+		return nil, fmt.Errorf("game UUIDs in session are not of type []string, but got %T", rawUuids)
 	}
 
 	return uuids, nil

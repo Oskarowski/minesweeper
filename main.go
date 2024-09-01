@@ -43,10 +43,43 @@ func init() {
 	fmt.Println("Trying to load .env file...")
 	envErr := godotenv.Load(".env")
 	if envErr != nil {
-		panic(envErr)
+		log.Println(".env file not found. Continuing with environment variables.")
 	}
 
-	globalStore = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
+	// Now load the SESSION_SECRET from environment variables
+	sessionSecret := os.Getenv("SESSION_SECRET")
+	if sessionSecret == "" {
+		log.Fatal("SESSION_SECRET environment variable not set. The application cannot start without it.")
+	}
+
+	globalStore = sessions.NewCookieStore([]byte(sessionSecret))
+	// TODO fix this so it will also work with HTTPS
+	globalStore.Options = &sessions.Options{
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   3600, // seconds
+		Secure:   false, // Set to true if using HTTPS
+	}
+	log.Println("Session store initialized successfully.")
+}
+
+func connectToDB() (*sql.DB, error) {
+	databaseURL := os.Getenv("DATABASE_URL")
+    if databaseURL == "" {
+        return nil, fmt.Errorf("DATABASE_URL environment variable not set")
+    }
+
+    db, err := sql.Open("sqlite", databaseURL)
+    if err != nil {
+        return nil, err
+    }
+
+	// Check if the database is accessible
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+    return db, nil
 }
 
 func main() {
@@ -59,12 +92,11 @@ func main() {
 
 	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
 
-	databaseURL := os.Getenv("DATABASE_URL")
-	dbConn, err := sql.Open("sqlite", databaseURL)
-	if err != nil {
-		log.Fatalf("Failed to open database: %v\n", err)
-	}
-	defer dbConn.Close()
+    dbConn, err := connectToDB()
+    if err != nil {
+        log.Fatalf("Failed to connect to database: %v", err)
+    }
+    defer dbConn.Close()
 
 	queries := db.New(dbConn)
 
