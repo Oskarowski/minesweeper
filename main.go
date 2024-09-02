@@ -57,7 +57,7 @@ func init() {
 	globalStore.Options = &sessions.Options{
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   3600, // seconds
+		MaxAge:   3600,  // seconds
 		Secure:   false, // Set to true if using HTTPS
 	}
 	log.Println("Session store initialized successfully.")
@@ -65,21 +65,21 @@ func init() {
 
 func connectToDB() (*sql.DB, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
-    if databaseURL == "" {
-        return nil, fmt.Errorf("DATABASE_URL environment variable not set")
-    }
+	if databaseURL == "" {
+		return nil, fmt.Errorf("DATABASE_URL environment variable not set")
+	}
 
-    db, err := sql.Open("sqlite", databaseURL)
-    if err != nil {
-        return nil, err
-    }
+	db, err := sql.Open("sqlite", databaseURL)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if the database is accessible
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
-    return db, nil
+	return db, nil
 }
 
 func main() {
@@ -92,11 +92,11 @@ func main() {
 
 	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
 
-    dbConn, err := connectToDB()
-    if err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
-    defer dbConn.Close()
+	dbConn, err := connectToDB()
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer dbConn.Close()
 
 	queries := db.New(dbConn)
 
