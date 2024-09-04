@@ -215,3 +215,54 @@ func (h *Handler) FlagCell(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(gameGridHtml))
 }
+
+func (h *Handler) IndexGames(w http.ResponseWriter, r *http.Request) {
+
+	page := r.URL.Query().Get("page")
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil || pageNumber < 1 {
+		pageNumber = 1
+	}
+
+	var pageSize int64 = 25
+
+	offset := (pageNumber - 1) * int(pageSize) // pageSize
+
+	games, err := h.Queries.ListGames(r.Context(), db.ListGamesParams{
+		Limit:  pageSize,
+		Offset: int64(offset),
+	})
+
+	if err != nil {
+		log.Printf("Failed to get games from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get games from database: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	totalGamesCount, totalGamesCountErr := GetTotalGamesCount(h.Queries)
+	if totalGamesCountErr != nil {
+		log.Printf("Failed to get total games count: %v", totalGamesCountErr)
+		http.Error(w, fmt.Sprintf("Failed to get total games count: %v", totalGamesCountErr), http.StatusInternalServerError)
+		return
+	}
+
+	totalPages := totalGamesCount / pageSize
+
+	data := struct {
+		Games           []db.ListGamesRow
+		CurrentPage     int
+		TotalPages      int
+		TotalGamesCount int
+	}{
+		Games:           games,
+		CurrentPage:     pageNumber,
+		TotalPages:      int(totalPages),
+		TotalGamesCount: int(totalGamesCount),
+	}
+
+	if err := h.Templates.ExecuteTemplate(w, "index_games_page", data); err != nil {
+		log.Printf("Failed to execute template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
