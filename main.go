@@ -25,12 +25,17 @@ func init() {
 	var err error
 
 	// Parse templates from the "public" and "public/**" directories
-	templates, err = template.ParseGlob("templates/*.html")
+	funcMap := template.FuncMap{
+		"Sub": func(a int, b int) int { return a - b },
+		"Add": func(a int, b int) int { return a + b },
+	}
+
+	templates, err = template.New("").Funcs(funcMap).ParseGlob("templates/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing templates: %v", err)
 	}
 
-	templates, err = templates.ParseGlob("templates/**/*.html")
+	templates, err = templates.New("").Funcs(funcMap).ParseGlob("templates/**/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing components: %v", err)
 	}
@@ -90,6 +95,7 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
+	// TODO - how to serve svg files?
 	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
 
 	dbConn, err := connectToDB()
@@ -109,6 +115,8 @@ func main() {
 	http.HandleFunc("/reveal", handler.RevealCell)
 
 	http.HandleFunc("/flag", handler.FlagCell)
+
+	http.HandleFunc("/admin/games", handler.IndexGames)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
