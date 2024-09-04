@@ -9,7 +9,7 @@ CREATE TABLE
         game_failed BOOLEAN NOT NULL DEFAULT FALSE,
         game_won BOOLEAN NOT NULL DEFAULT FALSE,
         grid_state TEXT NOT NULL,
-        create_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
 -- +goose StatementEnd
 -- +goose Down

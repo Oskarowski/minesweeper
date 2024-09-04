@@ -26,6 +26,21 @@ FROM
 WHERE
     uuid = ?;
 
+-- name: ListGames :many
+SELECT
+    id, grid_size, mines_amount, game_failed, game_won, created_at
+FROM
+    games
+ORDER BY
+    created_at DESC
+LIMIT ? OFFSET ?;
+
+-- name: GetTotalGamesCount :one
+SELECT
+    COUNT(id) as count
+FROM
+    games;
+
 -- name: UpdateGameGridStateById :exec
 UPDATE
     games
