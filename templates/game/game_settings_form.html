@@ -1,58 +1,109 @@
 {{ define "game_settings_form" }}
-
-<div id="game-settings-form" class="flex items-center justify-center h-screen bg-gray-100">
-    <form
-        hx-post="/start-game"
-        hx-target="#game-settings-form"
-        hx-swap="outerHTML"
-        class="p-8 rounded shadow-md w-96"
+    <div
+        id="game-settings-form"
+        class="flex items-center justify-center h-screen bg-gray-100"
     >
-        <div class="mb-4">
-            <label for="gridSize" class="block mb-2 font-semibold text-gray-700"
-                >Grid Size:</label
-            >
-            <input
-                type="number"
-                id="gridSize"
-                name="grid-size"
-                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter grid size (e.g., 10)"
-                required
-            />
-        </div>
-        <div class="mb-4">
-            <label for="mines" class="block mb-2 font-semibold text-gray-700"
-                >Number of Mines:</label
-            >
-            <input
-                type="number"
-                id="mines"
-                name="mines-amount"
-                class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter number of mines"
-            />
-        </div>
-        <div class="mb-4">
-            <label for="random-mines" class="inline-flex items-center">
+        <form
+            hx-post="/start-game"
+            hx-target="#game-settings-form"
+            hx-swap="outerHTML"
+            class="p-8 rounded shadow-md w-96"
+        >
+            <div class="mb-2 ">
+                <div class="flex justify-between">
+                    <label
+                        for="grid-size"
+                        class="block mb-2 font-semibold text-gray-700"
+                        >Grid Size:</label
+                    >
+                    <i
+                        class="scale-150 translate-y-[25%] fas fa-table-cells"
+                    ></i>
+                </div>
                 <input
-                    type="checkbox"
-                    id="random-mines"
-                    name="random-mines"
-                    class="mr-2"
+                    type="number"
+                    id="grid-size-input-field"
+                    name="grid-size"
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter grid size (e.g., 10)"
                 />
-                <span class="font-semibold text-gray-700"
-                    >Random Number of Mines</span
+            </div>
+
+            <div class="mb-4">
+                <label for="random-grid-size" class="inline-flex items-center">
+                    <input
+                        type="checkbox"
+                        id="random-grid-size-checkbox"
+                        name="random-grid-size"
+                        class="mr-2 scale-150"
+                        onchange="toggleFieldVisibility('grid-size-input-field', this)"
+                    />
+                    <span class="font-semibold text-gray-700"
+                        >Random Grid Size</span
+                    >
+                </label>
+            </div>
+
+            <hr class="my-6 border-t-2 border-gray-300" />
+
+            <div class="mb-2">
+                <div class="flex justify-between">
+                    <label
+                        for="grid-size"
+                        class="block mb-2 font-semibold text-gray-700"
+                        >Number of Mines:</label
+                    >
+                    <i class="scale-150 translate-y-[25%] fas fa-bomb"></i>
+                </div>
+                <input
+                    type="number"
+                    id="mines-input-field"
+                    name="mines-amount"
+                    class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter number of mines"
+                />
+            </div>
+            <div class="mb-4">
+                <label for="random-mines" class="inline-flex items-center">
+                    <input
+                        type="checkbox"
+                        id="random-mines-amount-checkbox"
+                        name="random-mines"
+                        class="mr-2 scale-150"
+                        onchange="toggleFieldVisibility('mines-input-field', this)"
+                    />
+                    <span class="font-semibold text-gray-700"
+                        >Random Number of Mines</span
+                    >
+                </label>
+            </div>
+            <div class="mt-6 text-center">
+                <button
+                    type="submit"
+                    class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
                 >
-            </label>
-        </div>
-        <div class="mt-6 text-center">
-            <button
-                type="submit"
-                class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
-            >
-                Start Game
-            </button>
-        </div>
-    </form>
-</div>
-{{end}}
+                    <i class="fas fa-play me-1"></i>
+                    Start Game
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        /**
+         * Toggles the visibility of the input field with the given id based on the value of the given checkbox.
+         * If the checkbox is checked, the input field is hidden; otherwise, it is shown.
+         * @param {string} fieldId - The html id of the field to toggle.
+         * @param {HTMLInputElement} checkbox - The checkbox element that toggles the input field.
+         */
+        function toggleFieldVisibility(fieldId, checkbox) {
+            const field = document.getElementById(fieldId);
+
+            if (checkbox.checked) {
+                field.style.display = "none";
+            } else {
+                field.style.display = "block";
+            }
+        }
+    </script>
+{{ end }}

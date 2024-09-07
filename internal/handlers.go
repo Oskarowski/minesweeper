@@ -38,25 +38,23 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// get the form data
-	gridSize, gridSizeErr := strconv.Atoi(r.FormValue("grid-size"))
-	minesAmount, minesAmountErr := strconv.Atoi((r.FormValue("mines-amount")))
+	gameSettings, formValidationErr := ValidateGameSettingsForm(
+		r.FormValue("grid-size"),
+		r.FormValue("mines-amount"),
+		r.FormValue("random-mines"),
+		r.FormValue("random-grid-size"),
+	)
 
-	if gridSizeErr != nil || minesAmountErr != nil {
-		http.Error(w, "Invalid input values", http.StatusBadRequest)
-		return
-	}
-
-	if gridSize <= 0 || minesAmount <= 0 {
-		http.Error(w, "The grid size and mines amount must be greater than 0", http.StatusUnprocessableEntity)
+	if formValidationErr != nil {
+		http.Error(w, formValidationErr.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// TODO eliminate need for this double creation of game because how grid state is initialized
-	newGame := models.NewGame(gridSize, minesAmount)
+	newGame := models.NewGame(gameSettings.GridSize, gameSettings.MinesAmount)
 	dbGame, dbGameErr := h.Queries.CreateGame(r.Context(), db.CreateGameParams{
-		GridSize:    int64(gridSize),
-		MinesAmount: int64(minesAmount),
+		GridSize:    int64(gameSettings.GridSize),
+		MinesAmount: int64(gameSettings.MinesAmount),
 		GridState:   models.EncodeGameGrid(newGame.Grid),
 	})
 
@@ -90,8 +88,8 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 		MinesAmount  int
 		GameGridHtml template.HTML
 	}{
-		GridSize:     gridSize,
-		MinesAmount:  minesAmount,
+		GridSize:     int(dbGame.GridSize),
+		MinesAmount:  int(dbGame.MinesAmount),
 		GameGridHtml: template.HTML(gameGridHtml),
 	}
 
