@@ -1,14 +1,18 @@
 {{ define "game_settings_form" }}
     <div
+        hx-ext="response-targets"
         id="game-settings-form"
-        class="flex items-center justify-center h-screen bg-gray-100"
+        class="flex flex-col items-center justify-center h-screen bg-gray-100"
     >
         <form
             hx-post="/start-game"
             hx-target="#game-settings-form"
+            hx-target-4*="#error-section"
             hx-swap="outerHTML"
             class="p-8 rounded shadow-md w-96"
         >
+            <div id="error-section" class="hidden mb-4"></div>
+
             <div class="mb-2 ">
                 <div class="flex justify-between">
                     <label

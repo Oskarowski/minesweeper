@@ -34,7 +34,11 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Unable to process form", http.StatusBadRequest)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   err.Error(),
+			ShowCloseBtn:   true,
+		})
 		return
 	}
 
@@ -46,7 +50,11 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if formValidationErr != nil {
-		http.Error(w, formValidationErr.Error(), http.StatusBadRequest)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   formValidationErr.Error(),
+			ShowCloseBtn:   true,
+		})
 		return
 	}
 
@@ -59,27 +67,41 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 	})
 
 	if dbGameErr != nil {
-		log.Printf("Error creating game: %v", dbGameErr)
-		http.Error(w, fmt.Sprintf("Error creating game: %v", dbGameErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error creating game: %v", dbGameErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	game, gameModelErr := models.FromDbGame(&dbGame)
 
 	if gameModelErr != nil {
-		log.Printf("Error creating game model: %v", gameModelErr)
-		http.Error(w, fmt.Sprintf("Error creating game model: %v", gameModelErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error creating game model: %v", gameModelErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
-		http.Error(w, fmt.Sprintf("Error saving game to session: %v", err), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error saving game to session: %v", err),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	gameGridHtml, gridGenerationErr := GenerateGridHTML(h.Templates, game)
 	if gridGenerationErr != nil {
-		http.Error(w, fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
@@ -261,6 +283,33 @@ func (h *Handler) IndexGames(w http.ResponseWriter, r *http.Request) {
 	if err := h.Templates.ExecuteTemplate(w, "index_games_page", data); err != nil {
 		log.Printf("Failed to execute template: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+type ErrorResponseConfig struct {
+	ResponseWriter http.ResponseWriter
+	ErrorMessage   string
+	ShowCloseBtn   bool
+}
+
+func (h *Handler) returnErrorResponse(config ErrorResponseConfig) {
+	if config.ErrorMessage == "" {
+		config.ErrorMessage = "An error occurred"
+	}
+
+	responseData := struct {
+		ErrorMessage string
+		ShowCloseBtn bool
+	}{
+		ErrorMessage: config.ErrorMessage,
+		ShowCloseBtn: config.ShowCloseBtn,
+	}
+
+	config.ResponseWriter.WriteHeader(http.StatusBadRequest)
+	err := h.Templates.ExecuteTemplate(config.ResponseWriter, "error_message", responseData)
+	if err != nil {
+		http.Error(config.ResponseWriter, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
 		return
 	}
 }

@@ -1,0 +1,24 @@
+{{ define "error_message" }}
+    <div id="error-section">
+        <div
+            id="error-container"
+            class="relative p-4 mb-4 text-red-800 bg-red-100 border border-red-300 rounded-lg"
+        >
+            <div class="flex items-center justify-between">
+                <div>
+                    <i class="mr-2 fas fa-exclamation-triangle"></i>
+                    <span>{{ .ErrorMessage }}</span>
+                </div>
+                {{ if .ShowCloseBtn }}
+                    <button
+                        onclick="document.getElementById('error-container').remove();"
+                        class="text-red-500 transition-colors hover:text-red-700"
+                        aria-label="Close"
+                    >
+                        <i class="fas fa-times"></i>
+                    </button>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+{{ end }}
