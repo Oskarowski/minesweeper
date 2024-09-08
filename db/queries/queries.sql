@@ -51,6 +51,17 @@ SET
 WHERE
     id = ?;
 
+-- name: GetGamesInfoByUuids :one
+SELECT 
+    COUNT(*) AS total_games,
+    COUNT(*) FILTER (WHERE game_won = TRUE) AS won_games,
+    COUNT(*) FILTER (WHERE game_failed = TRUE AND game_won = FALSE) AS lost_games,
+    COUNT(*) FILTER (WHERE game_failed = FALSE AND game_won = FALSE) AS not_finished_games
+FROM 
+    games
+WHERE 
+    uuid IN (sqlc.slice('uuids'));
+
 -- name: GetMovesByGameId :many
 SELECT
     *

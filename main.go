@@ -118,6 +118,8 @@ func main() {
 
 	http.HandleFunc("/admin/games", handler.IndexGames)
 
+	http.HandleFunc("/session-games-info", handler.SessionGamesInfo)
+
 	port := os.Getenv("APP_PORT")
 	if port == "" {
 		port = "8080"

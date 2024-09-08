@@ -313,3 +313,50 @@ func (h *Handler) returnErrorResponse(config ErrorResponseConfig) {
 		return
 	}
 }
+
+func (h *Handler) SessionGamesInfo(w http.ResponseWriter, r *http.Request) {
+	storedUuids, sessionErr := GetGameFromSession(r, h.Store)
+
+	if len(storedUuids) == 0 || sessionErr != nil {
+		err := h.Templates.ExecuteTemplate(w, "session_games_info", nil)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Create placeholders dynamically based on the number of UUIDs
+	// placeholders := make([]string, len(storedUuids))
+	// for i := range storedUuids {
+	// 	placeholders[i] = "?" // because SQLite uses "?" for placeholders
+	// }
+
+	gamesInSessionInfo, err := h.Queries.GetGamesInfoByUuids(r.Context(), storedUuids)
+
+	if err != nil {
+		log.Printf("Failed to fetch game counts from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to fetch game counts: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	responseData := struct {
+		HasGames         bool
+		TotalGames       int
+		WonGames         int
+		LostGames        int
+		NotFinishedGames int
+	}{
+		HasGames:         gamesInSessionInfo.TotalGames > 0,
+		TotalGames:       int(gamesInSessionInfo.TotalGames),
+		LostGames:        int(gamesInSessionInfo.LostGames),
+		WonGames:         int(gamesInSessionInfo.WonGames),
+		NotFinishedGames: int(gamesInSessionInfo.NotFinishedGames),
+	}
+
+	err = h.Templates.ExecuteTemplate(w, "session_games_info", responseData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+}

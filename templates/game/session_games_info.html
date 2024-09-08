@@ -1,0 +1,55 @@
+{{ define "session_games_info" }}
+    <div class="p-6 bg-gray-100 rounded shadow-md">
+        {{ if .HasGames }}
+
+            <div
+                class="flex items-center justify-center p-4 mb-4 bg-blue-100 rounded-lg shadow-sm"
+            >
+                <i class="mr-2 text-xl text-indigo-600 fas fa-gamepad"></i>
+                <p class="mr-2 text-lg text-gray-700">Total games played:</p>
+                <span class="text-xl font-bold text-indigo-600"
+                    >{{ .TotalGames }}</span
+                >
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mt-4 text-center">
+                <div class="p-4 bg-green-100 rounded-lg shadow-sm">
+                    <i class="mb-2 text-xl text-green-600 fas fa-trophy"></i>
+                    <p class="text-lg text-gray-700">Won</p>
+                    <span class="text-xl font-bold text-green-700"
+                        >{{ .WonGames }}</span
+                    >
+                </div>
+
+                <div class="p-4 bg-red-100 rounded-lg shadow-sm">
+                    <i
+                        class="mb-2 text-xl text-red-600 fas fa-skull-crossbones"
+                    ></i>
+                    <p class="text-lg text-gray-700">Lost</p>
+                    <span class="text-xl font-bold text-red-700"
+                        >{{ .LostGames }}</span
+                    >
+                </div>
+
+                <div class="p-4 bg-yellow-100 rounded-lg shadow-sm">
+                    <i
+                        class="mb-2 text-xl text-yellow-600 fas fa-hourglass-half"
+                    ></i>
+                    <p class="text-lg text-gray-700">Not Finished</p>
+                    <span class="text-xl font-bold text-yellow-700"
+                        >{{ .NotFinishedGames }}</span
+                    >
+                </div>
+            </div>
+        {{ else }}
+            <div
+                class="flex items-center justify-center p-4 mb-4 bg-gray-100 rounded-lg shadow-sm"
+            >
+                <p class="flex items-center text-lg text-gray-600">
+                    <i class="mr-2 text-gray-400 fas fa-info-circle"></i> No
+                    games played yet.
+                </p>
+            </div>
+        {{ end }}
+    </div>
+{{ end }}
