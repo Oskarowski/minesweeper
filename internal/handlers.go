@@ -34,54 +34,74 @@ func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
-		http.Error(w, "Unable to process form", http.StatusBadRequest)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   err.Error(),
+			ShowCloseBtn:   true,
+		})
 		return
 	}
 
-	// get the form data
-	gridSize, gridSizeErr := strconv.Atoi(r.FormValue("grid-size"))
-	minesAmount, minesAmountErr := strconv.Atoi((r.FormValue("mines-amount")))
+	gameSettings, formValidationErr := ValidateGameSettingsForm(
+		r.FormValue("grid-size"),
+		r.FormValue("mines-amount"),
+		r.FormValue("random-mines"),
+		r.FormValue("random-grid-size"),
+	)
 
-	if gridSizeErr != nil || minesAmountErr != nil {
-		http.Error(w, "Invalid input values", http.StatusBadRequest)
-		return
-	}
-
-	if gridSize <= 0 || minesAmount <= 0 {
-		http.Error(w, "The grid size and mines amount must be greater than 0", http.StatusUnprocessableEntity)
+	if formValidationErr != nil {
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   formValidationErr.Error(),
+			ShowCloseBtn:   true,
+		})
 		return
 	}
 
 	// TODO eliminate need for this double creation of game because how grid state is initialized
-	newGame := models.NewGame(gridSize, minesAmount)
+	newGame := models.NewGame(gameSettings.GridSize, gameSettings.MinesAmount)
 	dbGame, dbGameErr := h.Queries.CreateGame(r.Context(), db.CreateGameParams{
-		GridSize:    int64(gridSize),
-		MinesAmount: int64(minesAmount),
+		GridSize:    int64(gameSettings.GridSize),
+		MinesAmount: int64(gameSettings.MinesAmount),
 		GridState:   models.EncodeGameGrid(newGame.Grid),
 	})
 
 	if dbGameErr != nil {
-		log.Printf("Error creating game: %v", dbGameErr)
-		http.Error(w, fmt.Sprintf("Error creating game: %v", dbGameErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error creating game: %v", dbGameErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	game, gameModelErr := models.FromDbGame(&dbGame)
 
 	if gameModelErr != nil {
-		log.Printf("Error creating game model: %v", gameModelErr)
-		http.Error(w, fmt.Sprintf("Error creating game model: %v", gameModelErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error creating game model: %v", gameModelErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
-		http.Error(w, fmt.Sprintf("Error saving game to session: %v", err), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error saving game to session: %v", err),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
 	gameGridHtml, gridGenerationErr := GenerateGridHTML(h.Templates, game)
 	if gridGenerationErr != nil {
-		http.Error(w, fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr), http.StatusInternalServerError)
+		h.returnErrorResponse(ErrorResponseConfig{
+			ResponseWriter: w,
+			ErrorMessage:   fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr),
+			ShowCloseBtn:   false,
+		})
 		return
 	}
 
@@ -90,8 +110,8 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 		MinesAmount  int
 		GameGridHtml template.HTML
 	}{
-		GridSize:     gridSize,
-		MinesAmount:  minesAmount,
+		GridSize:     int(dbGame.GridSize),
+		MinesAmount:  int(dbGame.MinesAmount),
 		GameGridHtml: template.HTML(gameGridHtml),
 	}
 
@@ -214,4 +234,129 @@ func (h *Handler) FlagCell(w http.ResponseWriter, r *http.Request) {
 	gameGridHtml, _ := GenerateGridHTML(h.Templates, game)
 
 	w.Write([]byte(gameGridHtml))
+}
+
+func (h *Handler) IndexGames(w http.ResponseWriter, r *http.Request) {
+
+	page := r.URL.Query().Get("page")
+	pageNumber, err := strconv.Atoi(page)
+	if err != nil || pageNumber < 1 {
+		pageNumber = 1
+	}
+
+	var pageSize int64 = 25
+
+	offset := (pageNumber - 1) * int(pageSize) // pageSize
+
+	games, err := h.Queries.ListGames(r.Context(), db.ListGamesParams{
+		Limit:  pageSize,
+		Offset: int64(offset),
+	})
+
+	if err != nil {
+		log.Printf("Failed to get games from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to get games from database: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	totalGamesCount, totalGamesCountErr := GetTotalGamesCount(h.Queries)
+	if totalGamesCountErr != nil {
+		log.Printf("Failed to get total games count: %v", totalGamesCountErr)
+		http.Error(w, fmt.Sprintf("Failed to get total games count: %v", totalGamesCountErr), http.StatusInternalServerError)
+		return
+	}
+
+	totalPages := totalGamesCount / pageSize
+
+	data := struct {
+		Games           []db.ListGamesRow
+		CurrentPage     int
+		TotalPages      int
+		TotalGamesCount int
+	}{
+		Games:           games,
+		CurrentPage:     pageNumber,
+		TotalPages:      int(totalPages),
+		TotalGamesCount: int(totalGamesCount),
+	}
+
+	if err := h.Templates.ExecuteTemplate(w, "index_games_page", data); err != nil {
+		log.Printf("Failed to execute template: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to render template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+type ErrorResponseConfig struct {
+	ResponseWriter http.ResponseWriter
+	ErrorMessage   string
+	ShowCloseBtn   bool
+}
+
+func (h *Handler) returnErrorResponse(config ErrorResponseConfig) {
+	if config.ErrorMessage == "" {
+		config.ErrorMessage = "An error occurred"
+	}
+
+	responseData := struct {
+		ErrorMessage string
+		ShowCloseBtn bool
+	}{
+		ErrorMessage: config.ErrorMessage,
+		ShowCloseBtn: config.ShowCloseBtn,
+	}
+
+	config.ResponseWriter.WriteHeader(http.StatusBadRequest)
+	err := h.Templates.ExecuteTemplate(config.ResponseWriter, "error_message", responseData)
+	if err != nil {
+		http.Error(config.ResponseWriter, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) SessionGamesInfo(w http.ResponseWriter, r *http.Request) {
+	storedUuids, sessionErr := GetGameFromSession(r, h.Store)
+
+	if len(storedUuids) == 0 || sessionErr != nil {
+		err := h.Templates.ExecuteTemplate(w, "session_games_info", nil)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		}
+		return
+	}
+
+	// Create placeholders dynamically based on the number of UUIDs
+	// placeholders := make([]string, len(storedUuids))
+	// for i := range storedUuids {
+	// 	placeholders[i] = "?" // because SQLite uses "?" for placeholders
+	// }
+
+	gamesInSessionInfo, err := h.Queries.GetGamesInfoByUuids(r.Context(), storedUuids)
+
+	if err != nil {
+		log.Printf("Failed to fetch game counts from database: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to fetch game counts: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	responseData := struct {
+		HasGames         bool
+		TotalGames       int
+		WonGames         int
+		LostGames        int
+		NotFinishedGames int
+	}{
+		HasGames:         gamesInSessionInfo.TotalGames > 0,
+		TotalGames:       int(gamesInSessionInfo.TotalGames),
+		LostGames:        int(gamesInSessionInfo.LostGames),
+		WonGames:         int(gamesInSessionInfo.WonGames),
+		NotFinishedGames: int(gamesInSessionInfo.NotFinishedGames),
+	}
+
+	err = h.Templates.ExecuteTemplate(w, "session_games_info", responseData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
+
 }

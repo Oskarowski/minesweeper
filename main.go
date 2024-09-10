@@ -25,12 +25,17 @@ func init() {
 	var err error
 
 	// Parse templates from the "public" and "public/**" directories
-	templates, err = template.ParseGlob("templates/*.html")
+	funcMap := template.FuncMap{
+		"Sub": func(a int, b int) int { return a - b },
+		"Add": func(a int, b int) int { return a + b },
+	}
+
+	templates, err = template.New("").Funcs(funcMap).ParseGlob("templates/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing templates: %v", err)
 	}
 
-	templates, err = templates.ParseGlob("templates/**/*.html")
+	templates, err = templates.New("").Funcs(funcMap).ParseGlob("templates/**/*.html")
 	if err != nil {
 		log.Fatalf("Error parsing components: %v", err)
 	}
@@ -57,7 +62,7 @@ func init() {
 	globalStore.Options = &sessions.Options{
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   3600, // seconds
+		MaxAge:   3600,  // seconds
 		Secure:   false, // Set to true if using HTTPS
 	}
 	log.Println("Session store initialized successfully.")
@@ -65,21 +70,21 @@ func init() {
 
 func connectToDB() (*sql.DB, error) {
 	databaseURL := os.Getenv("DATABASE_URL")
-    if databaseURL == "" {
-        return nil, fmt.Errorf("DATABASE_URL environment variable not set")
-    }
+	if databaseURL == "" {
+		return nil, fmt.Errorf("DATABASE_URL environment variable not set")
+	}
 
-    db, err := sql.Open("sqlite", databaseURL)
-    if err != nil {
-        return nil, err
-    }
+	db, err := sql.Open("sqlite", databaseURL)
+	if err != nil {
+		return nil, err
+	}
 
 	// Check if the database is accessible
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
-    return db, nil
+	return db, nil
 }
 
 func main() {
@@ -90,13 +95,14 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
+	// TODO - how to serve svg files?
 	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
 
-    dbConn, err := connectToDB()
-    if err != nil {
-        log.Fatalf("Failed to connect to database: %v", err)
-    }
-    defer dbConn.Close()
+	dbConn, err := connectToDB()
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer dbConn.Close()
 
 	queries := db.New(dbConn)
 
@@ -109,6 +115,10 @@ func main() {
 	http.HandleFunc("/reveal", handler.RevealCell)
 
 	http.HandleFunc("/flag", handler.FlagCell)
+
+	http.HandleFunc("/admin/games", handler.IndexGames)
+
+	http.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 
 	port := os.Getenv("APP_PORT")
 	if port == "" {
