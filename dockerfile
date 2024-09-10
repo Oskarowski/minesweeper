@@ -8,21 +8,27 @@ WORKDIR /app
 RUN go install github.com/pressly/goose/v3/cmd/goose@latest
 RUN go install github.com/sqlc-dev/sqlc/cmd/sqlc@latest
 
-# Copy go.mod and go.sum files
-COPY go.mod go.sum ./
+# Install Node.js and npm for Tailwind CSS
+RUN apt-get update && apt-get install -y nodejs npm
 
-# Download all dependencies. Dependencies will be cached if the go.mod and go.sum files are not changed
+# Copy go.mod, go.sum, and package.json files
+COPY go.mod go.sum package.json package-lock.json ./
+
+# Download all dependencies for Go and Node.js. Dependencies will be cached if the go.mod and go.sum files are not changed
 RUN go mod download
+RUN npm install
 
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . ./
-# COPY *.go ./
 
 # Generate SQL code with sqlc (assumes sqlc.yaml is properly configured)
 RUN sqlc generate -f ./db/sqlc.yaml
 
 # Run goose migrations (assuming you have a db/migrations directory)
 RUN goose -dir ./db/migrations sqlite3 ./db/minesweeper.db up
+
+# Build the Tailwind CSS file
+RUN npx tailwindcss -i ./main.css -o ./dist/tailwind.css
 
 # Build the Go app
 # RUN CGO_ENABLED=0 GOOS=linux go build -o /server-build
@@ -43,7 +49,7 @@ COPY --from=builder /app/main .
 # Copy SQLite database file with migrations applied
 COPY --from=builder /app/db/minesweeper.db ./db/minesweeper.db
 
-# Copy any necessary static files or templates
+# Copy any necessary static files, templates, and CSS
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/dist ./dist
 
@@ -54,4 +60,5 @@ COPY --from=builder /app/db/migrations ./db/migrations
 EXPOSE 8080
 
 # Command to run the executable
-CMD ["/server-build"]
+# CMD ["/server-build"]
+CMD ["./main"]
