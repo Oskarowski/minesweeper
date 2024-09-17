@@ -115,6 +115,7 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 		GameGridHtml: template.HTML(gameGridHtml),
 	}
 
+	w.Header().Set("HX-Trigger", "gameStarted")
 	err := h.Templates.ExecuteTemplate(w, "game_layout", responseData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
