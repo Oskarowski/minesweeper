@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -120,10 +121,7 @@ func main() {
 
 	http.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 
 	fmt.Printf("Server is listening on port %s...\n", port)
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
