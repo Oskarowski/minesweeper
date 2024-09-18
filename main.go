@@ -96,8 +96,10 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	// TODO - how to serve svg files?
-	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
+	mux := http.NewServeMux()
+
+	staticFiles := http.StripPrefix("/dist/", http.FileServer(http.Dir("dist")))
+	mux.Handle("/dist/", staticFiles)
 
 	dbConn, err := connectToDB()
 	if err != nil {
@@ -108,14 +110,12 @@ func main() {
 	queries := db.New(dbConn)
 	handler := internal.NewHandler(templates, globalStore, queries)
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /", handler.Index)
-	mux.HandleFunc("POST /start-game", handler.StartGame)
-	mux.HandleFunc("GET /reveal", handler.RevealCell)
-	mux.HandleFunc("POST /flag", handler.FlagCell)
-	mux.HandleFunc("GET /admin/games", handler.IndexGames)
-	mux.HandleFunc("GET /session-games-info", handler.SessionGamesInfo)
+	mux.HandleFunc("/", handler.Index)
+	mux.HandleFunc("/start-game", handler.StartGame)
+	mux.HandleFunc("/reveal", handler.RevealCell)
+	mux.HandleFunc("/flag", handler.FlagCell)
+	mux.HandleFunc("/admin/games", handler.IndexGames)
+	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 
 	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 
