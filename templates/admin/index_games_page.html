@@ -32,6 +32,7 @@
                             class="text-sm leading-normal text-gray-700 uppercase bg-gray-200"
                         >
                             <th class="px-6 py-3 text-left">Game ID</th>
+                            <th class="px-6 py-3 text-left">Game UUID</th>
                             <th class="px-6 py-3 text-left">Grid Size</th>
                             <th class="px-6 py-3 text-left">Status</th>
                             <th class="px-6 py-3 text-left">Mines Amount</th>
@@ -47,6 +48,11 @@
                                         class="px-6 py-3 text-left whitespace-nowrap"
                                     >
                                         {{ .ID }}
+                                    </td>
+                                    <td
+                                        class="px-6 py-3 text-left whitespace-nowrap"
+                                    >
+                                        {{ .Uuid }}
                                     </td>
                                     <td class="px-6 py-3 text-left">
                                         {{ .GridSize }}
