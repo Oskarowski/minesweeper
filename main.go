@@ -106,25 +106,21 @@ func main() {
 	defer dbConn.Close()
 
 	queries := db.New(dbConn)
-
 	handler := internal.NewHandler(templates, globalStore, queries)
 
-	http.HandleFunc("/", handler.Index)
+	mux := http.NewServeMux()
 
-	http.HandleFunc("/start-game", handler.StartGame)
-
-	http.HandleFunc("/reveal", handler.RevealCell)
-
-	http.HandleFunc("/flag", handler.FlagCell)
-
-	http.HandleFunc("/admin/games", handler.IndexGames)
-
-	http.HandleFunc("/session-games-info", handler.SessionGamesInfo)
+	mux.HandleFunc("GET /", handler.Index)
+	mux.HandleFunc("POST /start-game", handler.StartGame)
+	mux.HandleFunc("GET /reveal", handler.RevealCell)
+	mux.HandleFunc("POST /flag", handler.FlagCell)
+	mux.HandleFunc("GET /admin/games", handler.IndexGames)
+	mux.HandleFunc("GET /session-games-info", handler.SessionGamesInfo)
 
 	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 
 	fmt.Printf("Server is listening on port %s...\n", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		fmt.Printf("Failed to start server: %v\n", err)
 	}
 }
