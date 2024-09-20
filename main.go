@@ -111,6 +111,7 @@ func main() {
 	handler := internal.NewHandler(templates, globalStore, queries)
 
 	mux.HandleFunc("/", handler.Index)
+	mux.HandleFunc("/load-game", handler.LoadGame)
 	mux.HandleFunc("/start-game", handler.StartGame)
 	mux.HandleFunc("/reveal", handler.RevealCell)
 	mux.HandleFunc("/flag", handler.FlagCell)

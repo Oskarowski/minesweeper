@@ -23,9 +23,63 @@ func NewHandler(templates *template.Template, store *sessions.CookieStore, queri
 }
 
 func (h *Handler) Index(w http.ResponseWriter, r *http.Request) {
+	gameUuid := r.URL.Query().Get("game_uuid")
 
-	err := h.Templates.ExecuteTemplate(w, "index", nil)
+	responseData := map[string]interface{}{
+		"HasGameUuid": gameUuid != "",
+		"GameUuid":    gameUuid,
+	}
 
+	err := h.Templates.ExecuteTemplate(w, "index", responseData)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}
+
+func (h *Handler) LoadGame(w http.ResponseWriter, r *http.Request) {
+
+	gameUuid := r.URL.Query().Get("game_uuid")
+	if gameUuid == "" {
+		http.Error(w, "Missing game-uuid parameter", http.StatusBadRequest)
+		return
+	}
+
+	dbGame, dbGameRetrieveErr := h.Queries.GetGameByUuid(r.Context(), gameUuid)
+	if dbGameRetrieveErr != nil {
+		http.Error(w, fmt.Sprintf("Not able to retrieve game with such uuid : %v", dbGameRetrieveErr), http.StatusConflict)
+		return
+	}
+
+	game, gameModelErr := models.FromDbGame(&dbGame)
+	if gameModelErr != nil {
+		http.Error(w, fmt.Sprintf("Error during game casting: %v", gameModelErr), http.StatusInternalServerError)
+		return
+	}
+
+	if err := SaveGameToSession(w, r, game, h.Store); err != nil {
+		http.Error(w, fmt.Sprintf("Not able to save game to session: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	gameGridHtml, gridGenerationErr := GenerateGridHTML(h.Templates, game)
+	if gridGenerationErr != nil {
+		http.Error(w, fmt.Sprintf("Not able to generate game grid: %v", gridGenerationErr), http.StatusInternalServerError)
+		return
+	}
+
+	responseData := struct {
+		GridSize     int
+		MinesAmount  int
+		GameGridHtml template.HTML
+	}{
+		GridSize:     int(dbGame.GridSize),
+		MinesAmount:  int(dbGame.MinesAmount),
+		GameGridHtml: template.HTML(gameGridHtml),
+	}
+
+	err := h.Templates.ExecuteTemplate(w, "game_layout", responseData)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
 		return
