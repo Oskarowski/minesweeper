@@ -116,15 +116,16 @@
             }
         }
 
-        document.body.addEventListener("htmx:beforeOnLoad", function(evt) {
-        const xhr = evt.detail.xhr;
+        document.body.addEventListener("htmx:beforeOnLoad", function (evt) {
+            const xhr = evt.detail.xhr;
 
-        if (xhr.getResponseHeader("HX-Trigger") === "gameStarted") {
-            const sessionGamesInfo = document.getElementById("session-games-info");
-            if (sessionGamesInfo) {
-                sessionGamesInfo.remove();
+            if (xhr.getResponseHeader("HX-Trigger") === "gameStarted") {
+                const sessionGamesInfo =
+                    document.getElementById("session-games-info");
+                if (sessionGamesInfo) {
+                    sessionGamesInfo.remove();
+                }
             }
-        }
-    });
+        });
     </script>
 {{ end }}
