@@ -177,19 +177,13 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
-	rowStr := r.URL.Query().Get("row")
-	colStr := r.URL.Query().Get("col")
+func (h *Handler) HandleGridAction(w http.ResponseWriter, r *http.Request) {
+	action := r.URL.Query().Get("action")
+	row, rowParErr := strconv.Atoi(r.URL.Query().Get("row"))
+	col, colParErr := strconv.Atoi(r.URL.Query().Get("col"))
 
-	row, err := strconv.Atoi(rowStr)
-	if err != nil {
-		http.Error(w, "Invalid row value", http.StatusBadRequest)
-		return
-	}
-
-	col, err := strconv.Atoi(colStr)
-	if err != nil {
-		http.Error(w, "Invalid column value", http.StatusBadRequest)
+	if action == "" || rowParErr != nil || colParErr != nil {
+		http.Error(w, "Unprocessable or missing request parameters.", http.StatusUnprocessableEntity)
 		return
 	}
 
@@ -200,7 +194,6 @@ func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
 		return
 	}
-
 	lastGameUuid := storedGamesUuids[len(storedGamesUuids)-1]
 
 	dbGame, err := h.Queries.GetGameByUuid(r.Context(), lastGameUuid)
@@ -217,17 +210,23 @@ func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	game.RevealCell(row, col)
+	switch action {
+	case "reveal_cell":
+		game.RevealCell(row, col)
+	case "flag_cell":
+		game.FlagCell(row, col)
+	default:
+		http.Error(w, "Invalid action.", http.StatusBadRequest)
+		return
+	}
 
 	encodedGridState := models.EncodeGameGrid(game.Grid)
-
 	err = h.Queries.UpdateGameGridStateById(r.Context(), db.UpdateGameGridStateByIdParams{
 		GameFailed: game.GameFailed,
 		GameWon:    game.GameWon,
 		GridState:  encodedGridState,
 		ID:         game.ID,
 	})
-
 	if err != nil {
 		log.Printf("Failed to update game state in database: %v", err)
 		http.Error(w, fmt.Sprintf("Failed to update game state in database: %v", err), http.StatusInternalServerError)
@@ -239,54 +238,6 @@ func (h *Handler) RevealCell(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error generating grid HTML: %v", gridGenerationErr), http.StatusInternalServerError)
 		return
 	}
-
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(gameGridHtml))
-}
-
-func (h *Handler) FlagCell(w http.ResponseWriter, r *http.Request) {
-	row, _ := strconv.Atoi(r.URL.Query().Get("row"))
-	col, _ := strconv.Atoi(r.URL.Query().Get("col"))
-
-	storedGamesUuids, err := GetGameFromSession(r, h.Store)
-
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Failed to get game from session: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	lastGameUuid := storedGamesUuids[len(storedGamesUuids)-1]
-
-	dbGame, err := h.Queries.GetGameByUuid(r.Context(), lastGameUuid)
-	if err != nil {
-		log.Printf("Failed to get game from database: %v", err)
-		http.Error(w, fmt.Sprintf("Failed to get game from database: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	game, err := models.FromDbGame(&dbGame)
-	if err != nil {
-		log.Printf("Failed to convert db game: %v", err)
-		http.Error(w, fmt.Sprintf("Failed to convert db game: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	game.FlagCell(row, col)
-
-	encodedGridState := models.EncodeGameGrid(game.Grid)
-	err = h.Queries.UpdateGameGridStateById(r.Context(), db.UpdateGameGridStateByIdParams{
-		GameFailed: game.GameFailed,
-		GameWon:    game.GameWon,
-		GridState:  encodedGridState,
-		ID:         game.ID,
-	})
-	if err != nil {
-		log.Printf("Failed to update game state in database: %v", err)
-		http.Error(w, fmt.Sprintf("Failed to update game state in database: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	gameGridHtml, _ := GenerateGridHTML(h.Templates, game)
 
 	w.Write([]byte(gameGridHtml))
 }
@@ -379,12 +330,6 @@ func (h *Handler) SessionGamesInfo(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	// Create placeholders dynamically based on the number of UUIDs
-	// placeholders := make([]string, len(storedUuids))
-	// for i := range storedUuids {
-	// 	placeholders[i] = "?" // because SQLite uses "?" for placeholders
-	// }
 
 	gamesInSessionInfo, err := h.Queries.GetGamesInfoByUuids(r.Context(), storedUuids)
 

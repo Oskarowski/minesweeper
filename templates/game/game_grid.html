@@ -16,9 +16,6 @@
                     class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square 
           {{ if $cell.IsRevealed }}cell-revealed{{ end }}
           {{ if $cell.IsFlagged }}cell-flagged{{ end }}"
-                    hx-get="/reveal?row={{ $rowIndex }}&col={{ $colIndex }}"
-                    hx-target="#game-grid"
-                    hx-swap="outerHTML"
                 >
                     {{ if $cell.IsFlagged }}
                         🚩

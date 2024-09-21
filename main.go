@@ -113,8 +113,7 @@ func main() {
 	mux.HandleFunc("/", handler.Index)
 	mux.HandleFunc("/load-game", handler.LoadGame)
 	mux.HandleFunc("/start-game", handler.StartGame)
-	mux.HandleFunc("/reveal", handler.RevealCell)
-	mux.HandleFunc("/flag", handler.FlagCell)
+	mux.HandleFunc("/handle-grid-action", handler.HandleGridAction)
 	mux.HandleFunc("/admin/games", handler.IndexGames)
 	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 
