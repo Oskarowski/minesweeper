@@ -360,3 +360,12 @@ func (h *Handler) SessionGamesInfo(w http.ResponseWriter, r *http.Request) {
 	}
 
 }
+
+func (h *Handler) Charts(w http.ResponseWriter, r *http.Request) {
+	err := h.Templates.ExecuteTemplate(w, "charts_page", nil)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
+}

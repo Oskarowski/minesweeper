@@ -109,6 +109,7 @@ func main() {
 
 	queries := db.New(dbConn)
 	handler := internal.NewHandler(templates, globalStore, queries)
+	apiHandler := internal.NewApiHandler(templates, globalStore, queries)
 
 	mux.HandleFunc("/", handler.Index)
 	mux.HandleFunc("/load-game", handler.LoadGame)
@@ -116,6 +117,9 @@ func main() {
 	mux.HandleFunc("/handle-grid-action", handler.HandleGridAction)
 	mux.HandleFunc("/games", handler.IndexGames)
 	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
+	mux.HandleFunc("/charts", handler.Charts)
+
+	mux.HandleFunc("/api/charts/pie/wins-losses-incomplete", apiHandler.PieWinsLossesIncompleteChart)
 
 	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 
