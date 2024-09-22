@@ -114,7 +114,7 @@ func main() {
 	mux.HandleFunc("/load-game", handler.LoadGame)
 	mux.HandleFunc("/start-game", handler.StartGame)
 	mux.HandleFunc("/handle-grid-action", handler.HandleGridAction)
-	mux.HandleFunc("/admin/games", handler.IndexGames)
+	mux.HandleFunc("/games", handler.IndexGames)
 	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 
 	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
