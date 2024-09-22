@@ -1,7 +1,47 @@
 {{ define "index_games_page" }}
     {{ template "base_layout" . }}
     <div class="container p-6 mx-auto mt-5 rounded-lg shadow-md">
-        <h1 class="mb-5 text-2xl font-bold text-center">List of Games</h1>
+        <div class="flex items-center justify-between mb-5">
+            <h1 class="justify-start text-2xl font-bold text-center">
+                List of Games
+            </h1>
+            <div class="flex items-center justify-end space-x-4">
+                <p class="text-sm text-gray-700">
+                    Page {{ .CurrentPage }} of
+                    {{ .TotalPages }}
+                </p>
+                <div class="flex space-x-2">
+                    {{ if gt .CurrentPage 1 }}
+                        <a
+                            href="/games?page={{ Sub .CurrentPage 1 }}"
+                            class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
+                        >
+                            Previous
+                        </a>
+                    {{ else }}
+                        <span
+                            class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
+                        >
+                            Previous
+                        </span>
+                    {{ end }}
+                    {{ if lt .CurrentPage .TotalPages }}
+                        <a
+                            href="/games?page={{ Add .CurrentPage 1 }}"
+                            class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
+                        >
+                            Next
+                        </a>
+                    {{ else }}
+                        <span
+                            class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
+                        >
+                            Next
+                        </span>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
 
         <div class="overflow-auto">
             <table
@@ -61,42 +101,6 @@
                     {{ end }}
                 </tbody>
             </table>
-        </div>
-
-        <div class="flex items-center justify-end mt-4 space-x-4">
-            <p class="text-sm text-gray-700">
-                Page {{ .CurrentPage }} of
-                {{ .TotalPages }}
-            </p>
-
-            <div class="flex space-x-2">
-                {{ if gt .CurrentPage 1 }}
-                    <a
-                        href="/admin/games?page={{ Sub .CurrentPage 1 }}"
-                        class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
-                        >Previous</a
-                    >
-                {{ else }}
-                    <span
-                        class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
-                        >Previous</span
-                    >
-                {{ end }}
-
-                {{ if lt .CurrentPage .TotalPages }}
-                    <a
-                        href="/admin/games?page={{ Add .CurrentPage 1 }}"
-                        class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
-                        >Next</a
-                    >
-                {{ else }}
-                    <span
-                        class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
-                    >
-                        Next
-                    </span>
-                {{ end }}
-            </div>
         </div>
     </div>
 {{ end }}
