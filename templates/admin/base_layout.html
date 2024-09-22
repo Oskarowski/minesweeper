@@ -1,4 +1,4 @@
-{{ define "index" }}
+{{ define "base_layout" }}
     <!doctype html>
     <html lang="en">
         <head>
@@ -26,37 +26,9 @@
             <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
         </head>
         <body class="h-screen bg-gray-100">
-            {{ if .HasGameUuid }}
-                <div 
-                    id="game-layout-injectable" 
-                    hx-get="/load-game?game_uuid={{ .GameUuid }}" 
-                    hx-trigger="load" 
-                    hx-target="#game-layout-injectable" 
-                    hx-swap="outerHTML"
-                    class="flex items-center justify-center my-2"
+            {{ template "navbar" }}
 
-                >
-                    <p class="text-lg text-gray-600 animate-pulse"></p>
-                        Loading existing game...
-                    </p>
-                </div>
-            {{ else }}
-            
-                <!-- Placeholder for session games info, when we fetch proper content -->
-                <div
-                    id="session-games-info"
-                    hx-get="/session-games-info"
-                    hx-trigger="load"
-                    hx-swap="outerHTML"
-                    class="flex items-center justify-center my-2"
-                >
-                    <p class="text-lg text-gray-600 animate-pulse">
-                        Loading session games info...
-                    </p>
-                </div>
-
-                {{ template "game_settings_form" }}
-            {{ end }}
+            {{ block "content" . }}{{ end }}
         </body>
     </html>
 {{ end }}

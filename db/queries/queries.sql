@@ -28,7 +28,7 @@ WHERE
 
 -- name: ListGames :many
 SELECT
-    id, grid_size, mines_amount, game_failed, game_won, created_at
+    id, uuid, grid_size, mines_amount, game_failed, game_won, created_at
 FROM
     games
 ORDER BY

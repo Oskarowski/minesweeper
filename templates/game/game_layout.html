@@ -5,24 +5,39 @@
         grid-template-columns: repeat(var(--grid-size), 1fr);
     }
 </style>
+    <div id="session-games-info-popover" popover></div>
 
-    <div class="h-screen p-8 bg-white rounded shadow-md">
+    <div class="p-4">
         <h1 class="mb-6 text-2xl font-bold text-center">Minesweeper</h1>
         <p class="text-center">Grid Size: {{ .GridSize }} x {{ .GridSize }}</p>
         <p class="mb-4 text-center">Number of Mines: {{ .MinesAmount }}</p>
+
+        <div class="mx-auto mt-6 text-center">
+            <button
+                onclick="window.location.href = window.location.origin"
+                class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-700"
+            >
+                Play Again
+            </button>
+            <button
+                class="px-4 py-2 bg-gray-500 rounded hover:bg-green-700"
+                popovertarget="session-games-info-popover"
+                id="show-session-info-btn"
+                hx-get="/session-games-info"
+                hx-target="#session-games-info-popover"
+                hx-swap="innerHTML"
+            >
+                <i class="text-indigo-600 fas fa-gamepad"></i>
+                Show Games
+            </button>
+        </div>
 
         <div id="minesweeper-grid" class="mt-6 max-w-[600px] mx-auto">
             {{ .GameGridHtml }}
         </div>
 
-        <div class="mt-6 text-center">
-            <button
-                onclick="location.reload()"
-                class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-700"
-            >
-                Play Again
-            </button>
-        </div>
+        <!-- responsible for popup for action on game grid => flagging / revealing cells -->
+        {{ template "game_action_btn" }}
     </div>
 
     <script>
@@ -33,7 +48,6 @@
         );
 
         document.addEventListener("htmx:afterSwap", (event) => {
-
             if (event.detail.target.id === "game-grid") {
                 console.log("Game grid swapped via HTMX");
                 initializeEventsForGameGrid();
@@ -45,18 +59,18 @@
 
             if (!gameGrid) return;
 
-            gameGrid.addEventListener("contextmenu", (e) => {
-                e.preventDefault();
+            gameGrid.addEventListener("click", (e) => {
+                let clickedCell = e.target.closest(".mine-field");
+                if (!clickedCell) return;
 
-                let cell = e.target.closest(".mine-field");
+                showActionPopup(gameGrid, clickedCell);
+            });
 
-                if (!cell) return;
-
-                let [row, col] = cell.id.split("-").slice(1).map(Number);
-                htmx.ajax("POST", `/flag?row=${row}&col=${col}`, {
-                    target: "#game-grid",
-                    swap: "outerHTML",
-                });
+            // Close the popup when clicking outside the grid or when an action is taken
+            document.addEventListener("click", (e) => {
+                if (!e.target.closest(".mine-field")) {
+                    hideActionPopup();
+                }
             });
         }
     </script>
