@@ -1,0 +1,16 @@
+{{ define "charts_page" }}
+    {{ template "base_layout" . }}
+    <div class="container p-6 mx-auto">
+        <h1 class="mb-8 text-3xl font-bold text-center">Game Statistics</h1>
+
+        <div class="flex justify-center">
+            <iframe
+                src="/api/charts/pie/wins-losses-incomplete"
+                loading="lazy"
+                scrolling="no"
+                height="1500px"
+                width="1000px"
+            ></iframe>
+        </div>
+    </div>
+{{ end }}
