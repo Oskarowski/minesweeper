@@ -1,0 +1,32 @@
+{{ define "base_layout" }}
+    <!doctype html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8" />
+            <meta
+                name="viewport"
+                content="width=device-width, initial-scale=1.0"
+            />
+            <title>Minesweeper!</title>
+            <script
+                src="https://unpkg.com/htmx.org@2.0.2"
+                integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
+                crossorigin="anonymous"
+            ></script>
+            <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
+            <link rel="stylesheet" href="/dist/tailwind.css" />
+            <link rel="stylesheet" href="/dist/main.css" />
+            <link
+                rel="stylesheet"
+                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+                integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+                crossorigin="anonymous"
+                referrerpolicy="no-referrer"
+            />
+            <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
+        </head>
+        <body class="h-screen bg-gray-100">
+            {{ block "content" . }}{{ end }}
+        </body>
+    </html>
+{{ end }}

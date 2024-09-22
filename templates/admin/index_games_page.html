@@ -1,134 +1,102 @@
 {{ define "index_games_page" }}
-    <!doctype html>
-    <html lang="en">
-        <head>
-            <meta charset="UTF-8" />
-            <meta
-                name="viewport"
-                content="width=device-width, initial-scale=1.0"
-            />
-            <title>Index Games</title>
-            <link rel="stylesheet" href="/dist/tailwind.css" />
-            <link rel="stylesheet" href="/dist/main.css" />
-            <link
-                rel="stylesheet"
-                href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
-                integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
-                crossorigin="anonymous"
-                referrerpolicy="no-referrer"
-            />
-        </head>
-        <body class="bg-gray-100">
-            <div class="container p-6 mx-auto mt-5 rounded-lg shadow-md">
-                <h1 class="mb-5 text-2xl font-bold text-center">
-                    List of Games
-                </h1>
+    {{ template "base_layout" . }}
+    <div class="container p-6 mx-auto mt-5 rounded-lg shadow-md">
+        <h1 class="mb-5 text-2xl font-bold text-center">List of Games</h1>
 
-                <div class="overflow-auto">
-                    <table
-                        class="min-w-full border border-collapse border-gray-200 rounded-lg shadow-md"
+        <div class="overflow-auto">
+            <table
+                class="min-w-full border border-collapse border-gray-200 rounded-lg shadow-md"
+            >
+                <thead
+                    class="text-sm leading-normal text-gray-700 uppercase bg-gray-200"
+                >
+                    <th class="px-6 py-3 text-left">Game ID</th>
+                    <th class="px-6 py-3 text-left">Game UUID</th>
+                    <th class="px-6 py-3 text-left">Grid Size</th>
+                    <th class="px-6 py-3 text-left">Status</th>
+                    <th class="px-6 py-3 text-left">Mines Amount</th>
+
+                    <th class="px-6 py-3 text-left">Crated At</th>
+                </thead>
+                <tbody class="text-sm font-light text-gray-600">
+                    {{ range .Games }}
+                        <tr class="border-b border-gray-200 hover:bg-gray-100">
+                            <td class="px-6 py-3 text-left whitespace-nowrap">
+                                {{ .ID }}
+                            </td>
+                            <td class="px-6 py-3 text-left whitespace-nowrap">
+                                {{ .Uuid }}
+                            </td>
+                            <td class="px-6 py-3 text-left">
+                                {{ .GridSize }}
+                            </td>
+                            <td class="px-6 py-2">
+                                {{ if .GameFailed }}
+                                    <i
+                                        class="text-red-500 fas fa-skull-crossbones"
+                                    ></i>
+                                {{ else if .GameWon }}
+                                    <i
+                                        class="text-yellow-500 fas fa-trophy"
+                                    ></i>
+                                {{ else }}
+                                    <i
+                                        class="text-gray-500 fas fa-hourglass"
+                                    ></i>
+                                {{ end }}
+                            </td>
+                            <td class="px-6 py-3 text-left">
+                                {{ .MinesAmount }}
+                            </td>
+                            <td class="px-6 py-3 text-left">
+                                {{ .CreatedAt }}
+                            </td>
+                        </tr>
+                    {{ else }}
+                        <tr>
+                            <td colspan="4" class="px-6 py-3 text-center">
+                                No games found.
+                            </td>
+                        </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex items-center justify-end mt-4 space-x-4">
+            <p class="text-sm text-gray-700">
+                Page {{ .CurrentPage }} of
+                {{ .TotalPages }}
+            </p>
+
+            <div class="flex space-x-2">
+                {{ if gt .CurrentPage 1 }}
+                    <a
+                        href="/admin/games?page={{ Sub .CurrentPage 1 }}"
+                        class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
+                        >Previous</a
                     >
-                        <thead
-                            class="text-sm leading-normal text-gray-700 uppercase bg-gray-200"
-                        >
-                            <th class="px-6 py-3 text-left">Game ID</th>
-                            <th class="px-6 py-3 text-left">Game UUID</th>
-                            <th class="px-6 py-3 text-left">Grid Size</th>
-                            <th class="px-6 py-3 text-left">Status</th>
-                            <th class="px-6 py-3 text-left">Mines Amount</th>
+                {{ else }}
+                    <span
+                        class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
+                        >Previous</span
+                    >
+                {{ end }}
 
-                            <th class="px-6 py-3 text-left">Crated At</th>
-                        </thead>
-                        <tbody class="text-sm font-light text-gray-600">
-                            {{ range .Games }}
-                                <tr
-                                    class="border-b border-gray-200 hover:bg-gray-100"
-                                >
-                                    <td
-                                        class="px-6 py-3 text-left whitespace-nowrap"
-                                    >
-                                        {{ .ID }}
-                                    </td>
-                                    <td
-                                        class="px-6 py-3 text-left whitespace-nowrap"
-                                    >
-                                        {{ .Uuid }}
-                                    </td>
-                                    <td class="px-6 py-3 text-left">
-                                        {{ .GridSize }}
-                                    </td>
-                                    <td class="px-6 py-2">
-                                        {{ if .GameFailed }}
-                                            <i
-                                                class="text-red-500 fas fa-skull-crossbones"
-                                            ></i>
-                                        {{ else if .GameWon }}
-                                            <i
-                                                class="text-yellow-500 fas fa-trophy"
-                                            ></i>
-                                        {{ else }}
-                                            <i
-                                                class="text-gray-500 fas fa-hourglass"
-                                            ></i>
-                                        {{ end }}
-                                    </td>
-                                    <td class="px-6 py-3 text-left">
-                                        {{ .MinesAmount }}
-                                    </td>
-                                    <td class="px-6 py-3 text-left">
-                                        {{ .CreatedAt }}
-                                    </td>
-                                </tr>
-                            {{ else }}
-                                <tr>
-                                    <td
-                                        colspan="4"
-                                        class="px-6 py-3 text-center"
-                                    >
-                                        No games found.
-                                    </td>
-                                </tr>
-                            {{ end }}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="flex items-center justify-end mt-4 space-x-4">
-                    <p class="text-sm text-gray-700">
-                        Page {{ .CurrentPage }} of
-                        {{ .TotalPages }}
-                    </p>
-
-                    <div class="flex space-x-2">
-                        {{ if gt .CurrentPage 1 }}
-                            <a
-                                href="/admin/games?page={{ Sub .CurrentPage 1 }}"
-                                class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
-                                >Previous</a
-                            >
-                        {{ else }}
-                            <span
-                                class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
-                                >Previous</span
-                            >
-                        {{ end }}
-
-                        {{ if lt .CurrentPage .TotalPages }}
-                            <a
-                                href="/admin/games?page={{ Add .CurrentPage 1 }}"
-                                class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
-                                >Next</a
-                            >
-                        {{ else }}
-                            <span
-                                class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
-                            >
-                                Next
-                            </span>
-                        {{ end }}
-                    </div>
-                </div>
+                {{ if lt .CurrentPage .TotalPages }}
+                    <a
+                        href="/admin/games?page={{ Add .CurrentPage 1 }}"
+                        class="px-4 py-2 text-sm font-semibold text-white bg-blue-500 rounded hover:bg-blue-700"
+                        >Next</a
+                    >
+                {{ else }}
+                    <span
+                        class="px-4 py-2 text-sm font-semibold text-gray-500 bg-gray-200 rounded cursor-not-allowed"
+                    >
+                        Next
+                    </span>
+                {{ end }}
             </div>
-        </body>
-    </html>
+        </div>
+    </div>
 {{ end }}
