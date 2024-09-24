@@ -119,7 +119,7 @@ func main() {
 	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
 	mux.HandleFunc("/charts", handler.Charts)
 
-	mux.HandleFunc("/api/charts/pie/wins-losses-incomplete", apiHandler.PieWinsLossesIncompleteChart)
+	mux.HandleFunc("/api/charts/bar/grid-size", apiHandler.GridSizeBar)
 
 	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 

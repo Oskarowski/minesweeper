@@ -47,5 +47,39 @@ func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http
 			}),
 		)
 
-	pie.Render(w)
+func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
+	// TODO remove this placeholder data
+	gridSizes := []string{"3x3", "4x4", "5x5", "6x6", "7x7"}
+	gamesPlayed := []int{15, 40, 25, 10, 5}
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
+		Title:    "Grid Size Popularity",
+		Subtitle: "Games played per grid size",
+	}), charts.WithDataZoomOpts(opts.DataZoom{
+		Type:  "slider",
+		Start: 10,
+		End:   50,
+	}),
+	)
+
+	items := make([]opts.BarData, 0)
+	for _, v := range gamesPlayed {
+		items = append(items, opts.BarData{Value: v})
+	}
+
+	bar.SetXAxis(gridSizes).
+		AddSeries("Games Played", items).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{Show: opts.Bool(true)}),
+		)
+
+	htmlBarSnippet, err := renderToHtml(bar)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering chart: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(htmlBarSnippet))
 }
