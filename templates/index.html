@@ -27,21 +27,19 @@
         </head>
         <body class="h-screen bg-gray-100">
             {{ if .HasGameUuid }}
-                <div 
-                    id="game-layout-injectable" 
-                    hx-get="/load-game?game_uuid={{ .GameUuid }}" 
-                    hx-trigger="load" 
-                    hx-target="#game-layout-injectable" 
+                <div
+                    id="game-layout-injectable"
+                    hx-get="/load-game?game_uuid={{ .GameUuid }}"
+                    hx-trigger="load"
+                    hx-target="#game-layout-injectable"
                     hx-swap="outerHTML"
                     class="flex items-center justify-center my-2"
-
                 >
-                    <p class="text-lg text-gray-600 animate-pulse"></p>
+                    <p class="text-lg text-gray-600 animate-pulse">
                         Loading existing game...
                     </p>
                 </div>
             {{ else }}
-            
                 <!-- Placeholder for session games info, when we fetch proper content -->
                 <div
                     id="session-games-info"
