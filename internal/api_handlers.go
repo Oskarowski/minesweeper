@@ -1,6 +1,8 @@
 package internal
 
 import (
+	"bytes"
+	"fmt"
 	"html/template"
 	"math/rand"
 	"minesweeper/internal/db"
@@ -9,6 +11,8 @@ import (
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/gorilla/sessions"
+
+	chartrender "github.com/go-echarts/go-echarts/v2/render"
 )
 
 type ApiHandler struct {
@@ -21,7 +25,30 @@ func NewApiHandler(templates *template.Template, store *sessions.CookieStore, qu
 	return &ApiHandler{templates, store, queries}
 }
 
-func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http.Request) {
+// renderToHtml renders a chart as a template.HTML value.
+//
+// The argument should be a go-echarts chart that implements the Renderer interface.
+// The rendered chart is returned as a template.HTML value.
+//
+// If the chart fails to render, an error is returned.
+func renderToHtml(c interface{}) (template.HTML, error) {
+	r, ok := c.(chartrender.Renderer)
+	if !ok {
+		return "", fmt.Errorf("provided chart does not implement the Renderer interface")
+	}
+
+	var buf bytes.Buffer
+
+	err := r.Render(&buf)
+	if err != nil {
+		return "", fmt.Errorf("failed to render chart: %v", err)
+
+	}
+
+	return template.HTML(buf.String()), nil
+}
+
+func pieWinsLossesIncompleteChart() *charts.Pie {
 	var (
 		itemCntPie = 3
 		options    = []string{"Wins", "Losses", "Incomplete"}
