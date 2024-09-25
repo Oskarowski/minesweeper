@@ -48,13 +48,14 @@ func renderToHtml(c interface{}) (template.HTML, error) {
 	return template.HTML(buf.String()), nil
 }
 
-func pieWinsLossesIncompleteChart() *charts.Pie {
+func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http.Request) {
 	var (
 		itemCntPie = 3
 		options    = []string{"Wins", "Losses", "Incomplete"}
 		colors     = []string{"#28a745", "#dc3545", "#ffc107"}
 	)
 
+	// TODO remove this placeholder data
 	items := make([]opts.PieData, 0)
 	for i := 0; i < itemCntPie; i++ {
 		items = append(items, opts.PieData{Name: options[i], Value: rand.Intn(100), ItemStyle: &opts.ItemStyle{Color: colors[i]}})
@@ -73,6 +74,16 @@ func pieWinsLossesIncompleteChart() *charts.Pie {
 				Formatter: "{b}: {d}%", // Label formatter to show percentage
 			}),
 		)
+
+	htmlPieSnipper, err := renderToHtml(pie)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering chart: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(htmlPieSnipper))
+}
 
 func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
 	// TODO remove this placeholder data
