@@ -225,7 +225,7 @@ func (h *Handler) HandleGridAction(w http.ResponseWriter, r *http.Request) {
 		GameFailed: game.GameFailed,
 		GameWon:    game.GameWon,
 		GridState:  encodedGridState,
-		ID:         game.ID,
+		Id:         game.Id,
 	})
 	if err != nil {
 		log.Printf("Failed to update game state in database: %v", err)
