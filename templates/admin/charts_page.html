@@ -7,14 +7,14 @@
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
             <div
                 id="pie-chart-container"
-                class="w-full p-4 bg-white rounded-lg shadow-lg"
+                class="flex items-center w-full p-4 bg-white rounded-lg shadow-lg"
             >
                 <div
                     id="pie-chart-loader"
                     hx-get="/api/charts/pie/wins-losses-incomplete"
                     hx-trigger="load"
                     hx-indicator="#wins-losses-incomplete-pie-chart-spinner"
-                    hx-swap="outerHTML"
+                    hx-swap="innerHTML"
                     class="flex items-center justify-center"
                 >
                     <div id="wins-losses-incomplete-pie-chart-spinner">
@@ -32,6 +32,50 @@
             </div>
 
             <div
+                id="games-played-per-month-chart-container"
+                class="p-4 bg-white rounded-lg shadow-lg "
+            >
+                <div class="flex items-center justify-center mt-4 mb-4">
+                    <label for="month-selector" class="mr-2"
+                        >Select Month:</label
+                    >
+                    <input
+                        name="picked-date-range"
+                        id="month-selector"
+                        type="month"
+                        min="2024-06"
+                        hx-get="/api/charts/bar/games-played"
+                        hx-trigger="change"
+                        hx-target="#games-played-per-month-chart-loader"
+                        class="p-2 border rounded"
+                    />
+                </div>
+                <div
+                    id="games-played-per-month-chart-loader"
+                    hx-get="/api/charts/bar/games-played"
+                    hx-trigger="load"
+                    hx-indicator="#games-played-per-month-chart-loader-spinner"
+                    hx-swap="innerHTML"
+                    class="flex items-center justify-center"
+                >
+                    <div id="games-played-per-month-chart-loader-spinner">
+                        <img
+                            src="/dist/load-spinner.svg"
+                            alt="Loading..."
+                            class="w-10 h-10"
+                            onerror="this.style.display='none';"
+                        />
+                    </div>
+
+                    <p class="text-lg text-gray-600 animate-pulse">
+                        Loading chart...
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2">
+            <div
                 id="bar-chart-container"
                 class="w-full p-4 bg-white rounded-lg shadow-lg"
             >
@@ -40,7 +84,7 @@
                     hx-get="/api/charts/bar/grid-size"
                     hx-trigger="load"
                     hx-indicator="#grid-size-bar-chart-spinner"
-                    hx-swap="outerHTML"
+                    hx-swap="innerHTML"
                     class="flex items-center justify-center"
                 >
                     <div id="grid-size-bar-chart-spinner">
@@ -52,6 +96,32 @@
                         />
                     </div>
 
+                    <p class="text-lg text-gray-600 animate-pulse">
+                        Loading chart...
+                    </p>
+                </div>
+            </div>
+
+            <div
+                id="mines-amount-chart-container"
+                class="w-full p-4 bg-white rounded-lg shadow-lg"
+            >
+                <div
+                    id="mines-amount-chart-loader"
+                    hx-get="/api/charts/bar/mines-amount"
+                    hx-trigger="load"
+                    hx-indicator="#mines-amount-chart-spinner"
+                    hx-swap="innerHTML"
+                    class="flex items-center justify-center"
+                >
+                    <div id="mines-amount-chart-spinner">
+                        <img
+                            src="/dist/load-spinner.svg"
+                            alt="Loading..."
+                            class="w-10 h-10"
+                            onerror="this.style.display='none';"
+                        />
+                    </div>
                     <p class="text-lg text-gray-600 animate-pulse">
                         Loading chart...
                     </p>
