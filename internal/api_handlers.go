@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"minesweeper/internal/db"
 	"net/http"
+	"strings"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -45,7 +46,16 @@ func renderToHtml(c interface{}) (template.HTML, error) {
 
 	}
 
-	return template.HTML(buf.String()), nil
+	htmlContent := buf.String()
+
+	// Remove the <head>, <title>, <script> tags from the rendered chart
+	// TODO use net/html package with RemoveChild to remove the tags
+	htmlContent = strings.ReplaceAll(htmlContent, "<head>", "")
+	htmlContent = strings.ReplaceAll(htmlContent, "</head>", "")
+	htmlContent = strings.ReplaceAll(htmlContent, "<title>Awesome go-echarts</title>", "")
+	htmlContent = strings.ReplaceAll(htmlContent, "<script src=\"https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js\"></script>", "")
+
+	return template.HTML(htmlContent), nil
 }
 
 func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http.Request) {
