@@ -68,4 +68,13 @@ SELECT
 FROM
     moves
 WHERE
-    game_id = ?
+    game_id = ?;
+
+-- name: GetGamesByMonthYearGroupedByDay :many
+SELECT 
+    strftime('%d', created_at) AS day, 
+    COUNT(*) AS games_played
+FROM games
+WHERE created_at >= ? AND created_at < ?
+GROUP BY day
+ORDER BY day;
