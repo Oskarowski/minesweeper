@@ -101,14 +101,18 @@ func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
 	gamesPlayed := []int{15, 40, 25, 10, 5}
 
 	bar := charts.NewBar()
-	bar.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
-		Title:    "Grid Size Popularity",
-		Subtitle: "Games played per grid size",
-	}), charts.WithDataZoomOpts(opts.DataZoom{
-		Type:  "slider",
-		Start: 10,
-		End:   50,
-	}),
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    "Grid Size Popularity",
+			Subtitle: "Games played per grid size",
+		}), charts.WithDataZoomOpts(opts.DataZoom{
+			Type:  "slider",
+			Start: 0,
+			End:   100,
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: opts.Bool(false),
+		}),
 	)
 
 	items := make([]opts.BarData, 0)
