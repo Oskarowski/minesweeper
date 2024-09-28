@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"html/template"
 	"math/rand"
@@ -128,6 +129,79 @@ func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
 
 	htmlBarSnippet, err := renderToHtml(bar)
 
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering chart: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(htmlBarSnippet))
+}
+func (h *ApiHandler) PlayedGamesInMonthBarChart(w http.ResponseWriter, r *http.Request) {
+	pickedDate := r.URL.Query().Get("picked-date-range")
+
+	if pickedDate == "" {
+		now := time.Now()
+		pickedDate = now.Format("2006-01")
+	}
+
+	parsedDate, err := time.Parse("2006-01", pickedDate)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Invalid date format: %v", err), http.StatusBadRequest)
+		return
+	}
+
+	startOfMonth := parsedDate
+	endOfMonth := startOfMonth.AddDate(0, 1, 0)
+
+	// Create sql.NullTime for start and end of the month
+	startTime := sql.NullTime{
+		Time:  startOfMonth,
+		Valid: true,
+	}
+
+	endTime := sql.NullTime{
+		Time:  endOfMonth,
+		Valid: true,
+	}
+
+	gamesPerDay, err := h.Queries.GetGamesByMonthYearGroupedByDay(r.Context(), db.GetGamesByMonthYearGroupedByDayParams{
+		CreatedAt:   startTime,
+		CreatedAt_2: endTime,
+	})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching games: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	days := []string{}
+	gamesPlayed := []opts.BarData{}
+
+	for _, gameDay := range gamesPerDay {
+		days = append(days, fmt.Sprintf("%v", gameDay.Day))
+		gamesPlayed = append(gamesPlayed, opts.BarData{Value: gameDay.GamesPlayed})
+	}
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    fmt.Sprintf("Games Per Day in %v", parsedDate.Format("January 2006")),
+			Subtitle: "Amount of games played per day",
+		}),
+		charts.WithDataZoomOpts(opts.DataZoom{
+			Type:  "slider",
+			Start: 0,
+			End:   100,
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: opts.Bool(false),
+		}),
+	)
+
+	bar.SetXAxis(days).
+		AddSeries("Games Played", gamesPlayed).
+		SetSeriesOptions(charts.WithLabelOpts(opts.Label{Show: opts.Bool(true)}))
+
+	htmlBarSnippet, err := renderToHtml(bar)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error rendering chart: %v", err), http.StatusInternalServerError)
 		return
