@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"html/template"
-	"math/rand"
 	"minesweeper/internal/db"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/go-echarts/go-echarts/v2/charts"
 	"github.com/go-echarts/go-echarts/v2/opts"
@@ -60,26 +60,28 @@ func renderToHtml(c interface{}) (template.HTML, error) {
 }
 
 func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http.Request) {
-	var (
-		itemCntPie = 3
-		options    = []string{"Wins", "Losses", "Incomplete"}
-		colors     = []string{"#28a745", "#dc3545", "#ffc107"}
-	)
+	rawData, err := h.Queries.GetGamesInfo(r.Context())
 
-	// TODO remove this placeholder data
-	items := make([]opts.PieData, 0)
-	for i := 0; i < itemCntPie; i++ {
-		items = append(items, opts.PieData{Name: options[i], Value: rand.Intn(100), ItemStyle: &opts.ItemStyle{Color: colors[i]}})
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching DB information: %v", err), http.StatusInternalServerError)
+		return
 	}
+
+	parsedData := make([]opts.PieData, 0)
+	var colors = []string{"#28a745", "#dc3545", "#ffc107"}
+
+	parsedData = append(parsedData, opts.PieData{Name: "Wins", Value: rawData.WonGames, ItemStyle: &opts.ItemStyle{Color: colors[0]}})
+	parsedData = append(parsedData, opts.PieData{Name: "Losses", Value: rawData.LostGames, ItemStyle: &opts.ItemStyle{Color: colors[1]}})
+	parsedData = append(parsedData, opts.PieData{Name: "Incomplete", Value: rawData.NotFinishedGames, ItemStyle: &opts.ItemStyle{Color: colors[2]}})
 
 	pie := charts.NewPie()
 
 	pie.SetGlobalOptions(charts.WithTitleOpts(opts.Title{
 		Title:    "Wins vs Losses vs Incomplete",
-		Subtitle: "Minesweeper Global Statistics",
+		Subtitle: fmt.Sprintf("Total games: %v", rawData.TotalGames),
 	}))
 
-	pie.AddSeries("Game Status", items).
+	pie.AddSeries("Game Status", parsedData).
 		SetSeriesOptions(
 			charts.WithLabelOpts(opts.Label{
 				Formatter: "{b}: {d}%", // Label formatter to show percentage
