@@ -23,38 +23,92 @@
                 crossorigin="anonymous"
                 referrerpolicy="no-referrer"
             />
-            <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
         </head>
-        <body class="h-screen bg-gray-100">
-            {{ if .HasGameUuid }}
-                <div
-                    id="game-layout-injectable"
-                    hx-get="/load-game?game_uuid={{ .GameUuid }}"
-                    hx-trigger="load"
-                    hx-target="#game-layout-injectable"
-                    hx-swap="outerHTML"
-                    class="flex items-center justify-center my-2"
-                >
-                    <p class="text-lg text-gray-600 animate-pulse">
-                        Loading existing game...
-                    </p>
-                </div>
-            {{ else }}
-                <!-- Placeholder for session games info, when we fetch proper content -->
-                <div
-                    id="session-games-info"
-                    hx-get="/session-games-info"
-                    hx-trigger="load"
-                    hx-swap="outerHTML"
-                    class="flex items-center justify-center my-2"
-                >
-                    <p class="text-lg text-gray-600 animate-pulse">
-                        Loading session games info...
-                    </p>
-                </div>
+        <body class="bg-gray-100 ">
+            <div
+                class="flex items-center justify-center min-h-screen"
+                id="home-page"
+            >
+                <div class="grid w-full max-w-5xl grid-cols-1 gap-3 ">
+                    <!-- Tile 1: Game Settings Form -->
+                    <div class="p-4 bg-white rounded-lg shadow ">
+                        <h2 class="mb-4 text-xl font-bold">Game Settings</h2>
+                        {{ template "game_settings_form" }}
+                    </div>
 
-                {{ template "game_settings_form" }}
-            {{ end }}
+                    <!-- Middle Piece: Input for Game UUID -->
+                    <div class="p-4 bg-white rounded-lg shadow">
+                        <h2 class="mb-2 text-xl font-bold">
+                            Load Game by UUID
+                        </h2>
+                        <form
+                            id="load-game-form"
+                            hx-get="/load-game"
+                            hx-target="#home-page"
+                            hx-swap="outerHTML"
+                            hx-trigger="submit"
+                            hx-include="[name=game_uuid]"
+                            class="flex items-center space-x-2"
+                        >
+                            <input
+                                type="text"
+                                name="game_uuid"
+                                placeholder="Enter Game UUID"
+                                required
+                                pattern="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}"
+                                title="Please enter a valid UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
+                                class="flex-grow p-2 border rounded"
+                            />
+                            <button
+                                type="submit"
+                                class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-600 whitespace-nowrap"
+                            >
+                                Load Game
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Two Columns: Game Statistics and Session Game Stats -->
+                    <div class="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+                        <!-- Tile 2: Game Statistics -->
+                        <div class="p-4 bg-white rounded-lg shadow">
+                            <h2 class="mb-2 text-xl font-bold">
+                                Game Statistics
+                            </h2>
+                            <p class="mb-4 text-gray-600">
+                                View the global stats of Minesweeper.
+                            </p>
+                            <a
+                                href="/games?page=1"
+                                class="inline-block px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-600"
+                            >
+                                View Statistics
+                            </a>
+                        </div>
+
+                        <!-- Tile 3: Session Games Stats -->
+                        <div
+                            id="session-games-info-tile"
+                            class="p-4 bg-white rounded-lg shadow"
+                        >
+                            <h2 class="mb-2 text-xl font-bold">
+                                Session Game Stats
+                            </h2>
+                            <div
+                                id="session-games-info"
+                                hx-get="/session-games-info"
+                                hx-trigger="load"
+                                hx-swap="outerHTML"
+                                class="flex items-center justify-center my-2"
+                            >
+                                <p class="text-lg text-gray-600 animate-pulse">
+                                    Loading session games info...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </body>
     </html>
 {{ end }}

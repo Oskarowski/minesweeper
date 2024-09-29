@@ -2,11 +2,11 @@
     <div
         hx-ext="response-targets"
         id="game-settings-form"
-        class="flex flex-col items-center justify-center bg-gray-100"
+        class="flex flex-col items-center justify-center"
     >
         <form
             hx-post="/start-game"
-            hx-target="#game-settings-form"
+            hx-target="#home-page"
             hx-target-4*="#error-section"
             hx-swap="outerHTML"
             class="p-8 rounded shadow-md w-96"
