@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"minesweeper/internal/db"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -99,9 +100,34 @@ func (h *ApiHandler) PieWinsLossesIncompleteChart(w http.ResponseWriter, r *http
 }
 
 func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
-	// TODO remove this placeholder data
-	gridSizes := []string{"3x3", "4x4", "5x5", "6x6", "7x7"}
-	gamesPlayed := []int{15, 40, 25, 10, 5}
+
+	rawData, err := h.Queries.GetGamesPlayedPerGridSize(r.Context())
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching grid size data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	gridSizes := make([]string, len(rawData))
+	parsedBarData := make([]opts.BarData, len(rawData))
+
+	// find the most popular grid size
+	maxGamesPlayed := int64(0)
+	for _, dbData := range rawData {
+		if dbData.GamesPlayed > maxGamesPlayed {
+			maxGamesPlayed = dbData.GamesPlayed
+		}
+	}
+
+	for i, dbData := range rawData {
+		gridSizes[i] = fmt.Sprintf("%vx%v", dbData.GridSize, dbData.GridSize)
+
+		if dbData.GamesPlayed == maxGamesPlayed {
+			parsedBarData[i] = opts.BarData{Value: dbData.GamesPlayed, ItemStyle: &opts.ItemStyle{Color: "#ffa500"}}
+		} else {
+			parsedBarData[i] = opts.BarData{Value: dbData.GamesPlayed}
+		}
+	}
 
 	bar := charts.NewBar()
 	bar.SetGlobalOptions(
@@ -118,13 +144,8 @@ func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
 		}),
 	)
 
-	items := make([]opts.BarData, 0)
-	for _, v := range gamesPlayed {
-		items = append(items, opts.BarData{Value: v})
-	}
-
 	bar.SetXAxis(gridSizes).
-		AddSeries("Games Played", items).
+		AddSeries("Games Played", parsedBarData).
 		SetSeriesOptions(
 			charts.WithLabelOpts(opts.Label{Show: opts.Bool(true)}),
 		)
@@ -138,6 +159,68 @@ func (h *ApiHandler) GridSizeBar(w http.ResponseWriter, r *http.Request) {
 
 	w.Write([]byte(htmlBarSnippet))
 }
+
+func (h *ApiHandler) MinesAmountBarChart(w http.ResponseWriter, r *http.Request) {
+	rawDbData, err := h.Queries.GetMinesPopularity(r.Context())
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error fetching mines popularity data: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// find the most popular amount of mines
+	maxAmount := int64(0)
+	for _, dbData := range rawDbData {
+		if dbData.MinesCount > maxAmount {
+			maxAmount = dbData.MinesCount
+		}
+	}
+
+	minesPopularity := make([]string, len(rawDbData))
+	parsedBarData := make([]opts.BarData, len(rawDbData))
+
+	for i, dbData := range rawDbData {
+		minesPopularity[i] = strconv.FormatInt(dbData.MinesAmount, 10)
+
+		if dbData.MinesCount == maxAmount {
+			parsedBarData[i] = opts.BarData{Value: dbData.MinesCount, ItemStyle: &opts.ItemStyle{Color: "#ffa500"}}
+		} else {
+			parsedBarData[i] = opts.BarData{Value: dbData.MinesCount}
+		}
+	}
+
+	bar := charts.NewBar()
+	bar.SetGlobalOptions(
+		charts.WithTitleOpts(opts.Title{
+			Title:    "Amount of Mines Popularity",
+			Subtitle: "Games with particular amount of mines",
+		}),
+		charts.WithDataZoomOpts(opts.DataZoom{
+			Type:  "slider",
+			Start: 10,
+			End:   75,
+		}),
+		charts.WithLegendOpts(opts.Legend{
+			Show: opts.Bool(false),
+		}),
+	)
+
+	bar.SetXAxis(minesPopularity).
+		AddSeries("Mines Amount", parsedBarData).
+		SetSeriesOptions(
+			charts.WithLabelOpts(opts.Label{Show: opts.Bool(true)}),
+		)
+
+	htmlBarSnippet, err := renderToHtml(bar)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering chart: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write([]byte(htmlBarSnippet))
+}
+
 func (h *ApiHandler) PlayedGamesInMonthBarChart(w http.ResponseWriter, r *http.Request) {
 	pickedDate := r.URL.Query().Get("picked-date-range")
 

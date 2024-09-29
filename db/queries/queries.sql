@@ -87,3 +87,15 @@ FROM games
 WHERE created_at >= ? AND created_at < ?
 GROUP BY day
 ORDER BY day;
+
+-- name: GetGamesPlayedPerGridSize :many
+SELECT grid_size, COUNT(*) AS games_played
+FROM games
+GROUP BY grid_size
+ORDER BY grid_size;
+
+-- name: GetMinesPopularity :many
+SELECT mines_amount, COUNT(*) AS mines_count
+FROM games
+GROUP BY mines_amount
+ORDER BY mines_amount;
