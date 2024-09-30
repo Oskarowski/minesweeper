@@ -8,6 +8,7 @@
                 content="width=device-width, initial-scale=1.0"
             />
             <title>Minesweeper!</title>
+            <link rel="icon" href="/dist/icon.png" type="image/png" />
             <script
                 src="https://unpkg.com/htmx.org@2.0.2"
                 integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
@@ -72,19 +73,55 @@
                     <!-- Two Columns: Game Statistics and Session Game Stats -->
                     <div class="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
                         <!-- Tile 2: Game Statistics -->
-                        <div class="p-4 bg-white rounded-lg shadow">
+                        <div
+                            class="flex flex-col p-4 bg-white rounded-lg shadow"
+                        >
                             <h2 class="mb-2 text-xl font-bold">
                                 Game Statistics
                             </h2>
                             <p class="mb-4 text-gray-600">
-                                View the global stats of Minesweeper.
+                                Explore the statistics of Minesweeper.
                             </p>
-                            <a
-                                href="/games?page=1"
-                                class="inline-block px-4 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-600"
+
+                            <!-- Minesweeper Stats Tiles Container -->
+                            <div
+                                class="grid flex-grow grid-cols-1 gap-4 md:grid-cols-2"
                             >
-                                View Statistics
-                            </a>
+                                <!-- Tile 1: Go to Charts Page -->
+                                <div
+                                    class="flex flex-col justify-center p-4 transition-colors duration-300 bg-gray-100 rounded-lg shadow hover:bg-blue-600 hover:shadow-md"
+                                >
+                                    <a href="/charts" class="block text-center">
+                                        <i
+                                            class="mb-2 text-3xl text-blue-500 transition-colors fas fa-chart-line hover:text-white"
+                                        ></i>
+                                        <h3
+                                            class="mb-2 text-lg font-semibold text-gray-800 transition-colors hover:text-white"
+                                        >
+                                            View Charts
+                                        </h3>
+                                    </a>
+                                </div>
+
+                                <!-- Tile 2: Go to Games Index Page -->
+                                <div
+                                    class="flex flex-col justify-center p-4 transition-colors duration-300 bg-gray-100 rounded-lg shadow hover:bg-green-600 hover:shadow-md"
+                                >
+                                    <a
+                                        href="/games?page=1"
+                                        class="block text-center"
+                                    >
+                                        <i
+                                            class="mb-2 text-3xl text-green-500 transition-colors fas fa-list hover:text-white"
+                                        ></i>
+                                        <h3
+                                            class="mb-2 text-lg font-semibold text-gray-800 transition-colors hover:text-white"
+                                        >
+                                            View Games
+                                        </h3>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Tile 3: Session Games Stats -->
@@ -100,8 +137,17 @@
                                 hx-get="/session-games-info"
                                 hx-trigger="load"
                                 hx-swap="outerHTML"
-                                class="flex items-center justify-center my-2"
+                                hx-indicator="#session-games-info-spinner"
+                                class="flex items-center justify-center space-x-2"
                             >
+                                <div id="session-games-info-spinner">
+                                    <img
+                                        src="/dist/load-spinner.svg"
+                                        alt="Loading..."
+                                        class="w-6 h-6"
+                                        onerror="this.style.display='none';"
+                                    />
+                                </div>
                                 <p class="text-lg text-gray-600 animate-pulse">
                                     Loading session games info...
                                 </p>

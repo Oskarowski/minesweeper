@@ -9,19 +9,18 @@
             hx-target="#home-page"
             hx-target-4*="#error-section"
             hx-swap="outerHTML"
-            class="w-full max-w-sm p-6 rounded-lg shadow-md"
+            class="w-full max-w-sm p-4 rounded-lg shadow-md"
         >
             <div id="error-section" class="hidden mb-4"></div>
 
-            <div class="mb-2 ">
-                <div class="flex justify-between">
-                    <label
-                        for="grid-size"
-                        class="block mb-2 text-lg font-semibold text-gray-700"
+            <!-- Grid Size Selection -->
+            <div class="mb-4 ">
+                <div class="flex items-center justify-between mb-2">
+                    <label for="grid-size" class="font-semibold text-gray-700"
                         >Grid Size:</label
                     >
                     <i
-                        class="scale-150 translate-y-[25%] fas fa-table-cells"
+                        class="scale-150 translate-y-[25%] text-gray-500 fas fa-table-cells"
                     ></i>
                 </div>
                 <input
@@ -33,10 +32,11 @@
                 />
             </div>
 
-            <div class="mb-4">
+            <!-- Random Grid Size Checkbox -->
+            <div class="flex items-center justify-between mb-4">
                 <label
                     for="random-grid-size-checkbox"
-                    class="inline-flex items-center ms-1"
+                    class="text-sm font-semibold text-gray-700"
                 >
                     <input
                         type="checkbox"
@@ -45,22 +45,24 @@
                         class="mr-2 scale-150"
                         onchange="toggleFieldVisibility('grid-size-input-field', this)"
                     />
-                    <span class="font-semibold text-gray-700"
-                        >Random Grid Size</span
-                    >
+                    Random Grid Size
                 </label>
+                <i class="text-gray-500 fas fa-random"></i>
             </div>
 
-            <hr class="my-6 border-t-2 border-gray-300" />
+            <hr class="my-4 border-t-2 border-gray-200" />
 
-            <div class="mb-2">
-                <div class="flex justify-between">
+            <!-- Number of Mines Selection -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
                     <label
-                        for="grid-size"
-                        class="block mb-2 text-lg font-semibold text-gray-700"
+                        for="mines-amount"
+                        class="font-semibold text-gray-700 "
                         >Number of Mines:</label
                     >
-                    <i class="scale-150 translate-y-[25%] fas fa-bomb"></i>
+                    <i
+                        class="scale-150 translate-y-[25%] text-gray-500 fas fa-bomb"
+                    ></i>
                 </div>
                 <input
                     type="number"
@@ -70,29 +72,32 @@
                     placeholder="Enter number of mines"
                 />
             </div>
-            <div class="mb-4">
+
+            <!-- Random Mines Checkbox -->
+            <div class="flex items-center justify-between mb-4">
                 <label
-                    for="random-mines-amount-checkbox"
-                    class="inline-flex items-center ms-1"
+                    for="random-mines-checkbox"
+                    class="text-sm font-semibold text-gray-700"
                 >
                     <input
                         type="checkbox"
-                        id="random-mines-amount-checkbox"
+                        id="random-mines-checkbox"
                         name="random-mines"
                         class="mr-2 scale-150"
                         onchange="toggleFieldVisibility('mines-input-field', this)"
                     />
-                    <span class="font-semibold text-gray-700"
-                        >Random Number of Mines</span
-                    >
+                    Random Number of Mines
                 </label>
+                <i class="text-gray-500 fas fa-dice"></i>
             </div>
-            <div class="mt-6 text-center">
+
+            <!-- Submit Button -->
+            <div class="mt-4 text-center">
                 <button
                     type="submit"
-                    class="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-700"
+                    class="px-6 py-2 font-bold text-white bg-blue-500 rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    <i class="fas fa-play me-1"></i>
+                    <i class="me-1 fas fa-play"></i>
                     Start Game
                 </button>
             </div>
@@ -108,12 +113,7 @@
          */
         function toggleFieldVisibility(fieldId, checkbox) {
             const field = document.getElementById(fieldId);
-
-            if (checkbox.checked) {
-                field.style.display = "none";
-            } else {
-                field.style.display = "block";
-            }
+            field.style.display = checkbox.checked ? "none" : "block";
         }
     </script>
 {{ end }}
