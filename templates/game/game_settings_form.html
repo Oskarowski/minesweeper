@@ -9,7 +9,7 @@
             hx-target="#home-page"
             hx-target-4*="#error-section"
             hx-swap="outerHTML"
-            class="p-8 rounded shadow-md w-96"
+            class="w-full max-w-sm p-6 rounded-lg shadow-md"
         >
             <div id="error-section" class="hidden mb-4"></div>
 
@@ -115,17 +115,5 @@
                 field.style.display = "block";
             }
         }
-
-        document.body.addEventListener("htmx:beforeOnLoad", function (evt) {
-            const xhr = evt.detail.xhr;
-
-            if (xhr.getResponseHeader("HX-Trigger") === "gameStarted") {
-                const sessionGamesInfo =
-                    document.getElementById("session-games-info");
-                if (sessionGamesInfo) {
-                    sessionGamesInfo.remove();
-                }
-            }
-        });
     </script>
 {{ end }}
