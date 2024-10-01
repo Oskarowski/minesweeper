@@ -225,7 +225,7 @@ func (h *Handler) HandleGridAction(w http.ResponseWriter, r *http.Request) {
 		GameFailed: game.GameFailed,
 		GameWon:    game.GameWon,
 		GridState:  encodedGridState,
-		ID:         game.ID,
+		Id:         game.Id,
 	})
 	if err != nil {
 		log.Printf("Failed to update game state in database: %v", err)
@@ -359,4 +359,13 @@ func (h *Handler) SessionGamesInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+}
+
+func (h *Handler) Charts(w http.ResponseWriter, r *http.Request) {
+	err := h.Templates.ExecuteTemplate(w, "charts_page", nil)
+
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error rendering template: %v", err), http.StatusInternalServerError)
+		return
+	}
 }

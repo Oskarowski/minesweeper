@@ -12,22 +12,26 @@
         <p class="text-center">Grid Size: {{ .GridSize }} x {{ .GridSize }}</p>
         <p class="mb-4 text-center">Number of Mines: {{ .MinesAmount }}</p>
 
-        <div class="mx-auto mt-6 text-center">
+        <div class="mx-auto mt-4 space-x-4 text-center">
+            <!-- Play Again Button -->
             <button
                 onclick="window.location.href = window.location.origin"
-                class="px-4 py-2 text-white bg-green-500 rounded hover:bg-green-700"
+                class="inline-block px-6 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
             >
+                <i class="text-indigo-600 fas me-1 fa-rotate-right"></i>
                 Play Again
             </button>
+
+            <!-- Show Games Button -->
             <button
-                class="px-4 py-2 bg-gray-500 rounded hover:bg-green-700"
+                class="inline-block px-6 py-2 text-white bg-gray-500 rounded shadow hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
                 popovertarget="session-games-info-popover"
                 id="show-session-info-btn"
                 hx-get="/session-games-info"
                 hx-target="#session-games-info-popover"
                 hx-swap="innerHTML"
             >
-                <i class="text-indigo-600 fas fa-gamepad"></i>
+                <i class="text-indigo-600 fas me-1 fa-gamepad"></i>
                 Show Games
             </button>
         </div>
@@ -36,7 +40,7 @@
             {{ .GameGridHtml }}
         </div>
 
-        <!-- responsible for popup for action on game grid => flagging / revealing cells -->
+        <!-- responsible for popup action on game grid => flagging / revealing cells -->
         {{ template "game_action_btn" }}
     </div>
 

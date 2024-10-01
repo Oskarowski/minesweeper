@@ -1,5 +1,5 @@
 {{ define "session_games_info" }}
-    <div id="session-games-info" class="p-6 bg-gray-100 rounded shadow-md">
+    <div id="session-games-info" class="p-6 rounded shadow-md">
         {{ if .HasGames }}
 
             <div
@@ -35,7 +35,7 @@
                     <i
                         class="mb-2 text-xl text-yellow-600 fas fa-hourglass-half"
                     ></i>
-                    <p class="text-lg text-gray-700">Not Finished</p>
+                    <p class="text-lg text-gray-700">Incompleted</p>
                     <span class="text-xl font-bold text-yellow-700"
                         >{{ .NotFinishedGames }}</span
                     >
@@ -43,7 +43,7 @@
             </div>
         {{ else }}
             <div
-                class="flex items-center justify-center p-4 mb-4 bg-gray-100 rounded-lg shadow-sm"
+                class="flex items-center justify-center p-4 mb-4 rounded-lg shadow-sm"
             >
                 <p class="flex items-center text-lg text-gray-600">
                     <i class="mr-2 text-gray-400 fas fa-info-circle"></i> No
