@@ -8,6 +8,7 @@
                 content="width=device-width, initial-scale=1.0"
             />
             <title>Minesweeper!</title>
+            <link rel="icon" href="/dist/icon.png" type="image/png" />
             <script
                 src="https://unpkg.com/htmx.org@2.0.2"
                 integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
@@ -23,23 +24,138 @@
                 crossorigin="anonymous"
                 referrerpolicy="no-referrer"
             />
-            <script src="https://unpkg.com/htmx-ext-response-targets@2.0.0/response-targets.js"></script>
         </head>
-        <body class="h-screen bg-gray-100">
-            <!-- Placeholder for session games info, when we fetch proper content -->
+        <body class="bg-gray-100 ">
             <div
-                id="session-games-info"
-                hx-get="/session-games-info"
-                hx-trigger="load"
-                hx-swap="outerHTML"
-                class="flex items-center justify-center my-2"
+                hx-ext="response-targets"
+                class="flex items-center justify-center min-h-screen"
+                id="home-page"
             >
-                <p class="text-lg text-gray-600 animate-pulse">
-                    Loading session games info...
-                </p>
-            </div>
+                <div class="grid w-full max-w-5xl grid-cols-1 gap-3">
+                    <!-- Tile 1: Game Settings Form -->
+                    <div class="p-4 bg-white rounded-lg shadow ">
+                        <h2 class="mb-4 text-xl font-bold">Game Settings</h2>
+                        {{ template "game_settings_form" }}
+                    </div>
 
-            {{ template "game_settings_form" }}
+                    <!-- Middle Piece: Input for Game UUID -->
+                    <div class="p-4 bg-white rounded-lg shadow">
+                        <h2 class="mb-2 text-xl font-bold">
+                            Load Game by UUID
+                        </h2>
+                        <form
+                            id="load-game-form"
+                            hx-get="/load-game"
+                            hx-target="#home-page"
+                            hx-swap="outerHTML"
+                            hx-trigger="submit"
+                            hx-include="[name=game_uuid]"
+                            class="flex items-center space-x-2"
+                        >
+                            <input
+                                type="text"
+                                name="game_uuid"
+                                placeholder="Enter Game UUID"
+                                required
+                                pattern="[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[1-5][a-fA-F0-9]{3}-[89abAB][a-fA-F0-9]{3}-[a-fA-F0-9]{12}"
+                                title="Please enter a valid UUID (e.g., 123e4567-e89b-12d3-a456-426614174000)"
+                                class="flex-grow p-2 border rounded"
+                            />
+                            <button
+                                type="submit"
+                                class="px-4 py-2 font-bold text-white bg-green-500 rounded hover:bg-green-600 whitespace-nowrap"
+                            >
+                                Load Game
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Two Columns: Game Statistics and Session Game Stats -->
+                    <div class="grid w-full grid-cols-1 gap-4 md:grid-cols-2">
+                        <!-- Tile 2: Game Statistics -->
+                        <div
+                            class="flex flex-col p-4 bg-white rounded-lg shadow"
+                        >
+                            <h2 class="mb-2 text-xl font-bold">
+                                Game Statistics
+                            </h2>
+                            <p class="mb-4 text-gray-600">
+                                Explore the statistics of Minesweeper.
+                            </p>
+
+                            <!-- Minesweeper Stats Tiles Container -->
+                            <div
+                                class="grid flex-grow grid-cols-1 gap-4 md:grid-cols-2"
+                            >
+                                <!-- Tile 1: Go to Charts Page -->
+                                <div
+                                    class="flex flex-col justify-center p-4 transition-colors duration-300 bg-gray-100 rounded-lg shadow hover:bg-blue-600 hover:shadow-md"
+                                >
+                                    <a href="/charts" class="block text-center">
+                                        <i
+                                            class="mb-2 text-3xl text-blue-500 transition-colors fas fa-chart-line hover:text-white"
+                                        ></i>
+                                        <h3
+                                            class="mb-2 text-lg font-semibold text-gray-800 transition-colors hover:text-white"
+                                        >
+                                            View Charts
+                                        </h3>
+                                    </a>
+                                </div>
+
+                                <!-- Tile 2: Go to Games Index Page -->
+                                <div
+                                    class="flex flex-col justify-center p-4 transition-colors duration-300 bg-gray-100 rounded-lg shadow hover:bg-green-600 hover:shadow-md"
+                                >
+                                    <a
+                                        href="/games?page=1"
+                                        class="block text-center"
+                                    >
+                                        <i
+                                            class="mb-2 text-3xl text-green-500 transition-colors fas fa-list hover:text-white"
+                                        ></i>
+                                        <h3
+                                            class="mb-2 text-lg font-semibold text-gray-800 transition-colors hover:text-white"
+                                        >
+                                            View Games
+                                        </h3>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tile 3: Session Games Stats -->
+                        <div
+                            id="session-games-info-tile"
+                            class="p-4 bg-white rounded-lg shadow"
+                        >
+                            <h2 class="mb-2 text-xl font-bold">
+                                Session Game Stats
+                            </h2>
+                            <div
+                                id="session-games-info"
+                                hx-get="/session-games-info"
+                                hx-trigger="load"
+                                hx-swap="outerHTML"
+                                hx-indicator="#session-games-info-spinner"
+                                class="flex items-center justify-center space-x-2"
+                            >
+                                <div id="session-games-info-spinner">
+                                    <img
+                                        src="/dist/load-spinner.svg"
+                                        alt="Loading..."
+                                        class="w-6 h-6"
+                                        onerror="this.style.display='none';"
+                                    />
+                                </div>
+                                <p class="text-lg text-gray-600 animate-pulse">
+                                    Loading session games info...
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </body>
     </html>
 {{ end }}

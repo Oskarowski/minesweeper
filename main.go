@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"database/sql"
 	"fmt"
 	"html/template"
@@ -95,8 +96,10 @@ func main() {
 	defer logFile.Close()
 	log.SetOutput(logFile)
 
-	// TODO - how to serve svg files?
-	http.Handle("/dist/", http.StripPrefix("/dist/", http.FileServer(http.Dir("dist"))))
+	mux := http.NewServeMux()
+
+	staticFiles := http.StripPrefix("/dist/", http.FileServer(http.Dir("dist")))
+	mux.Handle("/dist/", staticFiles)
 
 	dbConn, err := connectToDB()
 	if err != nil {
@@ -105,28 +108,26 @@ func main() {
 	defer dbConn.Close()
 
 	queries := db.New(dbConn)
-
 	handler := internal.NewHandler(templates, globalStore, queries)
+	apiHandler := internal.NewApiHandler(templates, globalStore, queries)
 
-	http.HandleFunc("/", handler.Index)
+	mux.HandleFunc("/", handler.Index)
+	mux.HandleFunc("/load-game", handler.LoadGame)
+	mux.HandleFunc("/start-game", handler.StartGame)
+	mux.HandleFunc("/handle-grid-action", handler.HandleGridAction)
+	mux.HandleFunc("/games", handler.IndexGames)
+	mux.HandleFunc("/session-games-info", handler.SessionGamesInfo)
+	mux.HandleFunc("/charts", handler.Charts)
 
-	http.HandleFunc("/start-game", handler.StartGame)
+	mux.HandleFunc("/api/charts/pie/wins-losses-incomplete", apiHandler.PieWinsLossesIncompleteChart)
+	mux.HandleFunc("/api/charts/bar/grid-size", apiHandler.GridSizeBar)
+	mux.HandleFunc("/api/charts/bar/mines-amount", apiHandler.MinesAmountBarChart)
+	mux.HandleFunc("/api/charts/bar/games-played", apiHandler.PlayedGamesInMonthBarChart)
 
-	http.HandleFunc("/reveal", handler.RevealCell)
-
-	http.HandleFunc("/flag", handler.FlagCell)
-
-	http.HandleFunc("/admin/games", handler.IndexGames)
-
-	http.HandleFunc("/session-games-info", handler.SessionGamesInfo)
-
-	port := os.Getenv("APP_PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := cmp.Or(os.Getenv("APP_PORT"), "8080")
 
 	fmt.Printf("Server is listening on port %s...\n", port)
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
+	if err := http.ListenAndServe(":"+port, mux); err != nil {
 		fmt.Printf("Failed to start server: %v\n", err)
 	}
 }

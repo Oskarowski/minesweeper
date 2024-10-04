@@ -1,0 +1,186 @@
+{{ define "game_action_btn" }}
+    <style>
+        #action-popup {
+            position: absolute;
+            width: 5.5rem;
+            height: 5.5rem;
+            display: flex;
+            justify-content: space-between;
+            overflow: hidden;
+            border-radius: 50%;
+            z-index: 10;
+            transition:
+                transform 0.3s ease,
+                visibility 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            transition:
+                width 0.3s ease,
+                height 0.3s ease;
+        }
+
+        .semi-circle.left {
+            width: 50%;
+            height: 100%;
+            background-color: #e7fd1e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top-left-radius: 50%;
+            border-bottom-left-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .semi-circle.left:hover {
+            background-color: #d4db00;
+        }
+
+        .semi-circle.right {
+            width: 50%;
+            height: 100%;
+            background-color: #32cd32;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-top-right-radius: 50%;
+            border-bottom-right-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .semi-circle.right:hover {
+            background-color: #228b22;
+        }
+
+        .semi-circle span {
+            font-size: 2rem;
+            color: white;
+        }
+
+        #action-popup.hidden {
+            display: none;
+        }
+
+        #action-popup.visible {
+            display: flex;
+            animation: popupFadeIn 0.3s ease;
+        }
+
+        @keyframes popupFadeIn {
+            from {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <div id="action-popup" class="invisible action-popup">
+        <button class="semi-circle left" onclick="flagCell()">
+            <span>🚩</span>
+        </button>
+        <button class="semi-circle right" onclick="revealCell()">
+            <span>👁️</span>
+        </button>
+    </div>
+
+    <script>
+        // declared to keep track of the last clicked cell in the game.
+        let globallySelectedCell;
+
+        function hideActionPopup() {
+            const actionPopup = document.getElementById("action-popup");
+            actionPopup.classList.remove("visible");
+            actionPopup.classList.add("invisible");
+        }
+
+        /**
+         * Creates an action handler object for a clicked cell.
+         * @returns {object|null} actionHandler with 'flag' and 'reveal' methods.
+         *                        null if no cell has been selected.
+         */
+        const createCellActionHandler = () => {
+            if (!globallySelectedCell) {
+                console.warn("No cell selected.");
+                return null;
+            }
+
+            const [rowIndex, colIndex] = globallySelectedCell.id
+                .split("-")
+                .slice(1)
+                .map(Number);
+
+            const performGridActionRequest = (action) => {
+                htmx.ajax(
+                    "GET",
+                    `/handle-grid-action?action=${action}&row=${rowIndex}&col=${colIndex}`,
+                    {
+                        target: "#game-grid",
+                        swap: "outerHTML",
+                    },
+                );
+                return actionHandler;
+            };
+
+            const actionHandler = {
+                flag: () => {
+                    performGridActionRequest("flag_cell");
+                    hideActionPopup();
+                    return actionHandler;
+                },
+                reveal: () => {
+                    performGridActionRequest("reveal_cell");
+                    hideActionPopup();
+                    return actionHandler;
+                },
+            };
+
+            return actionHandler;
+        };
+
+        /**
+         * Shows the action popup at the correct position for the selected cell
+         * @param {HTMLDivElement} gameGrid - The game grid element
+         * @param {HTMLDivElement} selectedCell - The selected cell element
+         */
+        function showActionPopup(gameGrid, selectedCell) {
+            globallySelectedCell = selectedCell;
+            hideActionPopup();
+            const actionPopup = document.getElementById("action-popup");
+
+            const cellRect = selectedCell.getBoundingClientRect();
+            const gridRect = gameGrid.getBoundingClientRect();
+            const actionPopupRect = actionPopup.getBoundingClientRect();
+
+            let topPosition =
+                cellRect.top + cellRect.height / 2 - actionPopupRect.height / 2;
+            let leftPosition =
+                cellRect.left + cellRect.width / 2 - actionPopupRect.width / 2;
+
+            // Adjust popup position if it goes out of bounds
+            if (topPosition < gridRect.top) topPosition = gridRect.top;
+            if (topPosition + actionPopupRect.height > gridRect.bottom)
+                topPosition = gridRect.bottom - actionPopupRect.height;
+            if (leftPosition < gridRect.left) leftPosition = gridRect.left;
+            if (leftPosition + actionPopupRect.width > gridRect.right)
+                leftPosition = gridRect.right - actionPopupRect.width;
+
+            actionPopup.style.top = `${topPosition}px`;
+            actionPopup.style.left = `${leftPosition}px`;
+
+            actionPopup.classList.remove("invisible");
+            actionPopup.classList.add("visible");
+        }
+
+        const flagCell = () => {
+            createCellActionHandler()?.flag();
+        };
+
+        const revealCell = () => {
+            createCellActionHandler()?.reveal();
+        };
+    </script>
+{{ end }}

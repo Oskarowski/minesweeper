@@ -15,7 +15,7 @@ type Cell struct {
 }
 
 type Game struct {
-	ID          int64
+	Id          int64
 	Uuid        string
 	GridSize    int
 	MinesAmount int
@@ -276,7 +276,7 @@ func FromDbGame(dbGame *db.Game) (*Game, error) {
 	decodedGameGrid := DecodeGameGrid(dbGame.GridState, int(dbGame.GridSize))
 
 	return &Game{
-		ID:          dbGame.ID,
+		Id:          dbGame.Id,
 		Uuid:        dbGame.Uuid,
 		GridSize:    int(dbGame.GridSize),
 		MinesAmount: int(dbGame.MinesAmount),

@@ -14,22 +14,21 @@
                 <div
                     id="cell-{{ $rowIndex }}-{{ $colIndex }}"
                     class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square 
-          {{ if $cell.IsRevealed }}cell-revealed{{ end }}
-          {{ if $cell.IsFlagged }}cell-flagged{{ end }}"
-                    hx-get="/reveal?row={{ $rowIndex }}&col={{ $colIndex }}"
-                    hx-target="#game-grid"
-                    hx-swap="outerHTML"
+                    {{ if or $cell.IsRevealed (or $.GameWon $.GameFailed) }}
+                        cell-revealed
+                    {{ end }}
+                    {{ if and $cell.IsFlagged (not $cell.IsRevealed) }}
+                        cell-flagged
+                    {{ end }}"
                 >
-                    {{ if $cell.IsFlagged }}
-                        🚩
-                    {{ else if $cell.IsRevealed }}
+                    {{ if or $cell.IsRevealed $.GameFailed $.GameWon }}
                         {{ if $cell.HasMine }}
                             💣
-                        {{ else if
-                            gt $cell.AdjacentMines 0
-                        }}
+                        {{ else if gt $cell.AdjacentMines 0 }}
                             {{ $cell.AdjacentMines }}
                         {{ end }}
+                    {{ else if $cell.IsFlagged }}
+                        🚩
                     {{ end }}
                 </div>
             {{ end }}

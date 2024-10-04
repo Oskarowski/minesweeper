@@ -1,12 +1,40 @@
 .mine-field {
-    background-color: rgba(0, 0, 0, 0.088);
-    transition: background-color 0.2s ease;
+  background-color: rgba(0, 0, 0, 0.088);
+  transition: background-color 0.2s ease;
+  cursor: pointer;
+  font-weight: bold;
 }
 
 .cell-revealed {
-    background-color: burlywood;
+  background-color: burlywood;
 }
 
 .mine-field:not(.cell-revealed):not(.cell-flagged):hover {
-    background-color: rgb(235, 219, 0);
+  background-color: rgb(235, 219, 0);
+}
+
+.mine-field:not(.cell-revealed):not(.cell-flagged):hover {
+  background-color: rgb(235, 219, 0);
+}
+
+[popover] {
+  transition:
+    opacity 0.2s,
+    transform 0.2s,
+    display 0.2s allow-discrete;
+
+  opacity: 0;
+  transform: translateY(3rem);
+
+  &:popover-open {
+    opacity: 1;
+    transform: none;
+
+    @starting-style {
+      & {
+        opacity: 0;
+        transform: translateY(-1rem);
+      }
+    }
+  }
 }
