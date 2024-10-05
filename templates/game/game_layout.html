@@ -2,21 +2,25 @@
 <style>
     #game-grid {
         --grid-size: {{ .GridSize }};
+        display: grid;
         grid-template-columns: repeat(var(--grid-size), 1fr);
+        max-width: 100%;
     }
+
 </style>
     <div id="session-games-info-popover" popover></div>
 
     <div class="p-4">
-        <h1 class="mb-6 text-2xl font-bold text-center">Minesweeper</h1>
         <p class="text-center">Grid Size: {{ .GridSize }} x {{ .GridSize }}</p>
         <p class="mb-4 text-center">Number of Mines: {{ .MinesAmount }}</p>
 
-        <div class="mx-auto mt-4 space-x-4 text-center">
+        <div
+            class="flex flex-col justify-center mx-auto mt-4 space-y-4 text-center sm:space-y-0 sm:space-x-4 sm:flex-row"
+        >
             <!-- Play Again Button -->
             <button
                 onclick="window.location.href = window.location.origin"
-                class="inline-block px-6 py-2 text-white bg-green-500 rounded shadow hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
+                class="inline-block w-full px-4 py-2 text-sm text-white bg-green-500 rounded shadow sm:w-auto sm:text-base hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400"
             >
                 <i class="text-indigo-600 fas me-1 fa-rotate-right"></i>
                 Play Again
@@ -24,7 +28,7 @@
 
             <!-- Show Games Button -->
             <button
-                class="inline-block px-6 py-2 text-white bg-gray-500 rounded shadow hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                class="inline-block w-full px-4 py-2 text-sm text-white bg-gray-500 rounded shadow sm:w-auto sm:text-base hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
                 popovertarget="session-games-info-popover"
                 id="show-session-info-btn"
                 hx-get="/session-games-info"
@@ -36,7 +40,10 @@
             </button>
         </div>
 
-        <div id="minesweeper-grid" class="mt-6 max-w-[600px] mx-auto">
+        <div
+            id="minesweeper-grid"
+            class="mt-6 max-w-full sm:max-w-[600px] mx-auto"
+        >
             {{ .GameGridHtml }}
         </div>
 

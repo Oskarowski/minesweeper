@@ -1,7 +1,7 @@
 {{ define "game_grid" }}
     <div
         id="game-grid"
-        class="grid gap-1 {{ if .GameFailed }}
+        class="grid gap-0 sm:grid-gap-1 {{ if .GameFailed }}
             pointer-events-none opacity-80 border-[6px] border-double
             border-red-800
         {{ else if .GameWon }}
@@ -13,7 +13,7 @@
             {{ range $colIndex, $cell := $row }}
                 <div
                     id="cell-{{ $rowIndex }}-{{ $colIndex }}"
-                    class="flex items-center justify-center text-center border border-gray-400 mine-field aspect-square 
+                    class="flex box-border items-center justify-center text-center border border-gray-400 mine-field aspect-square
                     {{ if or $cell.IsRevealed (or $.GameWon $.GameFailed) }}
                         cell-revealed
                     {{ end }}
@@ -21,15 +21,17 @@
                         cell-flagged
                     {{ end }}"
                 >
-                    {{ if or $cell.IsRevealed $.GameFailed $.GameWon }}
-                        {{ if $cell.HasMine }}
-                            💣
-                        {{ else if gt $cell.AdjacentMines 0 }}
-                            {{ $cell.AdjacentMines }}
+                    <span class="text-xs sm:text-base md:text-xl lg:text-2xl">
+                        {{ if or $cell.IsRevealed $.GameFailed $.GameWon }}
+                            {{ if $cell.HasMine }}
+                                💣
+                            {{ else if gt $cell.AdjacentMines 0 }}
+                                {{ $cell.AdjacentMines }}
+                            {{ end }}
+                        {{ else if $cell.IsFlagged }}
+                            🚩
                         {{ end }}
-                    {{ else if $cell.IsFlagged }}
-                        🚩
-                    {{ end }}
+                    </span>
                 </div>
             {{ end }}
         {{ end }}
