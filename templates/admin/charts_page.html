@@ -1,13 +1,29 @@
 {{ define "charts_page" }}
     <script src="https://go-echarts.github.io/go-echarts-assets/assets/echarts.min.js"></script>
     {{ template "base_layout" . }}
-    <div class="p-6 mx-auto">
-        <h1 class="mb-8 text-3xl font-bold text-center">Game Statistics</h1>
 
-        <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+    <!-- Info message for small screens -->
+    <div
+        id="small-screen-warning"
+        class="absolute inset-0 z-10 flex items-center justify-center hidden"
+    >
+        <div class="max-w-md p-6 text-center bg-gray-100 rounded-lg shadow-lg">
+            <p class="text-xl font-semibold text-gray-800">
+                Sorry, charts cannot be displayed on small screens. Please use a
+                larger device or resize your window.
+            </p>
+        </div>
+    </div>
+
+    <div class="p-6 mx-auto" id="charts-page-container">
+        <h1 class="w-full mb-8 text-3xl font-bold text-center">
+            Game Statistics
+        </h1>
+
+        <div class="grid grid-cols-1 gap-4 2xl:grid-cols-2">
             <div
                 id="pie-chart-container"
-                class="flex items-center w-full p-4 bg-white rounded-lg shadow-lg"
+                class="flex items-center justify-center w-full p-4 bg-white rounded-lg shadow-lg"
             >
                 <div
                     id="pie-chart-loader"
@@ -74,7 +90,7 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-4 mt-4 2xl:grid-cols-2">
             <div
                 id="bar-chart-container"
                 class="w-full p-4 bg-white rounded-lg shadow-lg"
@@ -129,4 +145,27 @@
             </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Check if the screen width is small and hide the charts if necessary
+            function handleResize() {
+                var smallScreenWarning = document.getElementById(
+                    "small-screen-warning",
+                );
+                var chartsContainer = document.getElementById(
+                    "charts-page-container",
+                );
+                if (window.innerWidth < 1024) {
+                    smallScreenWarning.classList.remove("hidden");
+                    chartsContainer.classList.add("hidden");
+                } else {
+                    smallScreenWarning.classList.add("hidden");
+                    chartsContainer.classList.remove("hidden");
+                }
+            }
+            handleResize();
+            window.addEventListener("resize", handleResize);
+        });
+    </script>
 {{ end }}

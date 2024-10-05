@@ -36,20 +36,29 @@ type GameSettings struct {
 }
 
 func ValidateGameSettingsForm(gridSizeStr, minesAmountStr, randomMinesStr, randomGridSizeStr string) (GameSettings, error) {
-
-	gridSize, gridSizeErr := strconv.Atoi(gridSizeStr)
-	minesAmount, minesAmountErr := strconv.Atoi(minesAmountStr)
+	var (
+		gridSize, minesAmount       int
+		gridSizeErr, minesAmountErr error
+	)
 
 	if randomGridSizeStr == "on" {
 		// TODO - load min and max grid size from config
 		gridSize = rand.Intn(10) + 5 // range(5, 15)
 		gridSizeErr = nil
+	} else {
+		gridSize, gridSizeErr = strconv.Atoi(gridSizeStr)
+
 	}
 
 	if randomMinesStr == "on" {
-		// TODO - mines amount based on chosen difficulty?
-		minesAmount = rand.Intn((gridSize*gridSize)/2) + 1
-		minesAmountErr = nil
+		if gridSize > 0 {
+			minesAmount = rand.Intn((gridSize*gridSize)/2) + 1
+			minesAmountErr = nil
+		} else {
+			return GameSettings{}, errors.New("grid size must be valid when using random mines")
+		}
+	} else {
+		minesAmount, minesAmountErr = strconv.Atoi(minesAmountStr)
 	}
 
 	if gridSizeErr != nil || minesAmountErr != nil {
