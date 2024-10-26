@@ -29,6 +29,9 @@
                     name="grid-size"
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter grid size (e.g., 10)"
+                    min="2"
+                    max="22"
+                    onchange="adjustMinesInputFieldRange(this)"
                 />
             </div>
 
@@ -70,6 +73,8 @@
                     name="mines-amount"
                     class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Enter number of mines"
+                    min="1"
+                    max="1000"
                 />
             </div>
 
@@ -104,16 +109,5 @@
         </form>
     </div>
 
-    <script>
-        /**
-         * Toggles the visibility of the input field with the given id based on the value of the given checkbox.
-         * If the checkbox is checked, the input field is hidden; otherwise, it is shown.
-         * @param {string} fieldId - The html id of the field to toggle.
-         * @param {HTMLInputElement} checkbox - The checkbox element that toggles the input field.
-         */
-        function toggleFieldVisibility(fieldId, checkbox) {
-            const field = document.getElementById(fieldId);
-            field.style.display = checkbox.checked ? "none" : "block";
-        }
-    </script>
+    <script src="/dist/gameSettingsForm.js"></script>
 {{ end }}

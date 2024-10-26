@@ -4,9 +4,7 @@
         --grid-size: {{ .GridSize }};
         display: grid;
         grid-template-columns: repeat(var(--grid-size), 1fr);
-        max-width: 100%;
     }
-
 </style>
     <div id="session-games-info-popover" popover></div>
 
@@ -42,7 +40,7 @@
 
         <div
             id="minesweeper-grid"
-            class="mt-6 max-w-full sm:max-w-[600px] mx-auto"
+            class="mt-6 sm:max-w-[600px] md:max-w-[900px] mx-auto"
         >
             {{ .GameGridHtml }}
         </div>

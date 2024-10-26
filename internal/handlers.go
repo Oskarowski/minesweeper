@@ -93,6 +93,7 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 			ErrorMessage:   err.Error(),
 			ShowCloseBtn:   true,
 		})
+		log.Printf("Error parsing form: %v", err)
 		return
 	}
 
@@ -109,6 +110,7 @@ func (h *Handler) StartGame(w http.ResponseWriter, r *http.Request) {
 			ErrorMessage:   formValidationErr.Error(),
 			ShowCloseBtn:   true,
 		})
+		log.Printf("Form validation error: %v", formValidationErr)
 		return
 	}
 
