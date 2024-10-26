@@ -6,7 +6,14 @@
  */
 function toggleFieldVisibility(fieldId, checkbox) {
     const field = document.getElementById(fieldId);
-    field.style.display = checkbox.checked ? "none" : "block";
+    if (checkbox.checked) {
+        // Clear the value and hide the field when checkbox is checked
+        field.value = "";
+        adjustMinesInputFieldRange();
+        field.style.display = "none";
+    } else {
+        field.style.display = "block";
+    }
 }
 
 function adjustMinesInputFieldRange() {
@@ -20,12 +27,16 @@ function adjustMinesInputFieldRange() {
         minesInputField.min = 1;
         minesInputField.max = maxMines;
         minesInputField.placeholder = `Enter number of mines (max: ${maxMines})`;
+    } else {
+        minesInputField.min = 1;
+        minesInputField.max = 350;
+        minesInputField.placeholder = "Enter number of mines";
     }
 }
 
 window.addEventListener("load", () => {
     const gridSizeInputField = document.getElementById("grid-size-input-field");
 
-    const maxGridSizeBasedOnScreenSize = window.innerWidth < 768 ? 15 : 50;
+    const maxGridSizeBasedOnScreenSize = window.innerWidth < 768 ? 10 : 22;
     gridSizeInputField.max = maxGridSizeBasedOnScreenSize;
 });

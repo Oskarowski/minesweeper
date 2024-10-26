@@ -1,6 +1,7 @@
 {{ define "game_grid" }}
     <div
         id="game-grid"
+        style="max-width: 100%;"
         class="grid gap-0 sm:grid-gap-1 {{ if .GameFailed }}
             pointer-events-none opacity-80 border-[6px] border-double
             border-red-800
@@ -21,7 +22,7 @@
                         cell-flagged
                     {{ end }}"
                 >
-                    <span class="text-xs sm:text-base md:text-xl lg:text-2xl">
+                    <span class="text-xs sm:text-base md:text-lg">
                         {{ if or $cell.IsRevealed $.GameFailed $.GameWon }}
                             {{ if $cell.HasMine }}
                                 💣

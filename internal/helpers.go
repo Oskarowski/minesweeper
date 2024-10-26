@@ -33,7 +33,7 @@ func GetTotalGamesCount(queries *db.Queries) (int64, error) {
 
 const (
 	MinGridSize   = 2
-	MaxGridSize   = 50
+	MaxGridSize   = 22
 	MinMinesRatio = 0.1
 	MaxMinesRatio = 0.8
 )
